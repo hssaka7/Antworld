@@ -61,7 +61,8 @@ public class AntWorld implements ActionListener
     drawPanel = new Renderer(this, title, FRAME_WIDTH, FRAME_HEIGHT);
     JFrame window = drawPanel.window;
 
-    // BufferedImage map = loadImage("small.png", window);
+    //********************* Note On map replacement  **************************
+    //The map must have at least a one pixel a boarder of water: LandType.WATER.getColor.
     BufferedImage map = Util.loadImage("AntWorld.png", window);
     worldWidth = map.getWidth();
     worldHeight = map.getHeight();
@@ -111,7 +112,7 @@ public class AntWorld implements ActionListener
 
     drawPanel.initWorld(world, worldWidth, worldHeight);
     drawPanel.repaint();
-    
+
     gameTimer = new Timer(Constants.TIME_STEP_MSEC, this);
 
     System.out.println("Done Initializing AntWorld");
@@ -199,9 +200,24 @@ public class AntWorld implements ActionListener
     return gameTick;
   }
 
+
+  /**
+   * Uses the given map image to create the world including world size, nest
+   * locations and all terrain.
+   * @param map Must have the following properties:
+   * <ol>
+   *     <li>The map must have at least a one pixel a boarder of water:
+   *              LandType.WATER.getColor</li>
+   *
+   *     <li>The map must have at least one pixel of 0x0 to define the nest.</li>
+   *     <li>Each nest (pixel with 0x0 color) must be at least 2xNEST_RADIUS distant from each other nest.</li>
+   *     <li>Map images must be resized using nearest neighbor NOT any type of interpolation or
+   *            averaging which will create shades that are undefined.</li>
+   *     <li>Map images must be saved in a lossless format (i.e. png).</li>
+   *            </ol>
+   */
   private void readAntWorld(BufferedImage map)
   {
-
     world = new Cell[worldWidth][worldHeight];
     for (int x = 0; x < worldWidth; x++)
     {
