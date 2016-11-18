@@ -9,7 +9,7 @@ public enum TeamNameEnum
   Allen_Brendan,
   Arthur_Phil,
   Atle_Caleb,
-  Connor_Dustin,
+  Connor_Rob,
   Daniel_Corey,
   Ederin_Dominic,
   Forrest_Michael,
@@ -21,9 +21,10 @@ public enum TeamNameEnum
   Kenneth_Germaine,
   Kevin_Sahba,
   Michael_Joaquin,
-  Nathan_Tran_Nicholas,
+  Nathan_Nicholas,
   Robin_Alex,
   Sam_Dominic,
   Sarah_Beatriz,
   Kim_Javier,
-}
+  Linh_Dustin
+  }
