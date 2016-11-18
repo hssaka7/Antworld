@@ -6,10 +6,8 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
-
 import javax.swing.Timer;
 import javax.swing.JFrame;
-
 import antworld.common.AntData;
 import antworld.common.CommData;
 import antworld.common.Constants;
