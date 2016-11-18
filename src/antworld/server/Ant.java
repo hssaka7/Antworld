@@ -267,6 +267,4 @@ public class Ant //extends AntData
     if (targetCell == null) return null;
     return targetCell.getAnt();
   }
-  
-  
 }

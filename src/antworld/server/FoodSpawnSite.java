@@ -18,13 +18,11 @@ public class FoodSpawnSite implements Serializable
   private static final int SPAWN_RADIUS = 30;
   private static final int NUMBER_OF_SPAWNS_PER_RESET = 100;
   private static final int MAX_SIMULTANEOUS_PILES_FROM_SITE = 5;
-  private static final double spawnMedicAnywhereProbability = 0.05;
   private static Random random = Constants.random;
   private int spawnCountSinceReset = 0;
   private boolean[] didNestGatherFromThisSiteRecently; 
   private int activeFoodPileCount = 0;
   private boolean needSpawn = true;
-  private ArrayList<FoodData> foodPileList = new ArrayList<>();
   
   public FoodSpawnSite(FoodType type, int x, int y, int totalNestCount)
   { 

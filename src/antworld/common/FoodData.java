@@ -54,4 +54,9 @@ public class FoodData  implements Serializable
    * @return the count
    */
   public int getCount() {return count;}
+
+  public String toString()
+  {
+    return foodType + ":"+count;
+  }
 }

@@ -149,6 +149,17 @@ public class AntData implements Comparable<AntData>, Serializable
     return out;
   }
 
+
+  /*
+   * Creates a formatted string showing some of this ant's fields for compact display in the GUI mouse-over.
+   */
+  public String toStringShort()
+  {
+    String out = nestName.toString() +"[" + id + "]: " + health + " HP ";
+    if (carryUnits > 0) out += "[" + carryType + ":" + carryUnits + "]";
+    return out;
+  }
+
   /* 
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
