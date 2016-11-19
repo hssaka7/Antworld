@@ -67,9 +67,12 @@ public class CommData implements Serializable
   /** The food set. */
   public volatile HashSet<FoodData> foodSet;  // set to null before sending to server.
 
-  //The server will automatically set requestNestData=true whenever
-  //   a new client attaches or whenever a client changes nest homes.
-  /** The request nest common. */
+  /**
+   * Setting this to true, asks the server to populate the nestData array. When this is false,
+   * the server will set nestData to null to save network traffic.
+   * The server will automatically set requestNestData=true whenever
+   * a new client attaches or whenever a client changes nest homes.
+   */
   public volatile boolean requestNestData = false;
   
   /** The return to nest on disconnect. */
@@ -78,12 +81,10 @@ public class CommData implements Serializable
   /**
    * Instantiates a new comm common.
    *
-   * @param nestName the nest name
    * @param team the team
    */
-  public CommData(NestNameEnum nestName, TeamNameEnum team)
+  public CommData(TeamNameEnum team)
   {
-    this.myNest = nestName;
     this.myTeam = team;
   }
   
@@ -111,9 +112,10 @@ public class CommData implements Serializable
    */
   public CommData packageForSendToServer()
   {
-    CommData outData = new CommData(myNest,  myTeam);
-    
-    outData.wallClockMilliSec = System.currentTimeMillis(); 
+    CommData outData = new CommData(myTeam);
+
+    outData.myNest = myNest;
+    outData.wallClockMilliSec = System.currentTimeMillis();
     outData.gameTick = gameTick;
 
     outData.myNest = myNest;

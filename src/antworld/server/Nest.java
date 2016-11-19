@@ -32,7 +32,7 @@ public class Nest extends NestData implements Serializable
 
   private int[] foodStockPile = new int[FoodType.SIZE];
 
-  private ArrayList<AntData> antList = new ArrayList<AntData>();
+  private ArrayList<AntData> antList = new ArrayList<>();
   
   private volatile long timeOfLastMessageFromClient;
   private NetworkStatus status = NetworkStatus.CONNECTED; 
@@ -320,7 +320,7 @@ public class Nest extends NestData implements Serializable
   {
     // sending common to client
     
-    CommData commData = new CommData(nestName, team);
+    CommData commData = new CommData(team);
     
     if (orgCommData.requestNestData)
     {
@@ -328,6 +328,7 @@ public class Nest extends NestData implements Serializable
     }
     else commData.nestData = null;
 
+    commData.myNest = nestName;
     commData.gameTick = AntWorld.getGameTick()+1;
     commData.wallClockMilliSec = world.getWallClockAtLastUpdateStart();
     commData.myAntList.clear();

@@ -41,9 +41,7 @@ public class NearlyBrainlessBots
   private static final int DIR_BIT_ANY_S = DIR_BIT_S | DIR_BIT_SE | DIR_BIT_SW;
   private static final int DIR_BIT_ANY_E = DIR_BIT_E | DIR_BIT_NE | DIR_BIT_SE;
   private static final int DIR_BIT_ANY_W = DIR_BIT_W | DIR_BIT_NW | DIR_BIT_SW;
-  
-  
-  private static final int FLOCK_HAPPY_DIST = 5;
+
   private static final int MAX_EXPLORE_DIST = 300;
   
 
@@ -53,7 +51,7 @@ public class NearlyBrainlessBots
     NearlyBrainlessBots.world = worldTmp;
     NearlyBrainlessBots.myNest = myNestTmp;
     
-    CommData data = new CommData(myNest.nestName, myTeam);
+    CommData data = new CommData(myTeam);
     data.myAntList = myNest.getAntList();
     
     for (AntData ant : data.myAntList)

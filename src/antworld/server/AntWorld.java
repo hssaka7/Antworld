@@ -26,8 +26,8 @@ import antworld.renderer.Renderer;
 public class AntWorld implements ActionListener
 {
   public static Random random = Constants.random;
-  public static final int FRAME_WIDTH = 1024;// 640;//
-  public static final int FRAME_HEIGHT = 768; // 480;//
+  public static final int FRAME_WIDTH = 1200;
+  public static final int FRAME_HEIGHT = 700;
 
   public final boolean showGUI;
 
@@ -73,7 +73,8 @@ public class AntWorld implements ActionListener
 
     if (restorePoint == null)
     {
-      createFoodSpawnSites();
+      foodSpawnList = new ArrayList<FoodSpawnSite>();
+      createFoodSpawnSite();
       //WorldRestore.writeFoodSpawnSites(foodSpawnList);
       //System.out.println("AntWorld.loadFoodSites()...."
       //  + foodSpawnList.size());
@@ -124,6 +125,7 @@ public class AntWorld implements ActionListener
   public int getWorldWidthInBlocks() {return worldWidthInBlocks;}
   public int getWorldHeightInBlocks() {return worldHeightInBlocks;}
   public HashSet<FoodData>[][] getFoodBlocks() {return foodBlocks;}
+  public ArrayList<FoodSpawnSite> getFoodSpawnList() {return foodSpawnList;}
   public ArrayList<Nest> getNestList() {return nestList;}
 
   private void createHashMapsOfGameObjects()
@@ -187,6 +189,15 @@ public class AntWorld implements ActionListener
   {
     return nestList.get(name.ordinal());
   }
+  public Nest getNest(TeamNameEnum name)
+  {
+    for (Nest nest : nestList)
+    {
+      if (nest.team == name) return nest;
+    }
+    return null;
+  }
+
 
   public long getWallClockAtLastUpdateStart()
   {
@@ -536,25 +547,21 @@ public class AntWorld implements ActionListener
     }
   }
 
-  private void createFoodSpawnSites()
+  private void createFoodSpawnSite()
   {
-    foodSpawnList = new ArrayList<FoodSpawnSite>();
-
-    int totalSitesToSpawn = nestList.size()/2;
+    int totalSitesToSpawn = 3 + random.nextInt(3);
     while (totalSitesToSpawn > 0)
     {
-      int nestIdx1 = random.nextInt(nestList.size());
-      int nestIdx2 = random.nextInt(nestList.size());
-      double weight = 0.3333 + random.nextDouble()/3.0;
-
-      Nest nest1 = nestList.get(nestIdx1);
-      Nest nest2 = nestList.get(nestIdx2);
-      int spawnX = (int)(weight*nest1.getCenterX() + (1-weight)*nest2.getCenterX());
-      int spawnY = (int)(weight*nest1.getCenterY() + (1-weight)*nest2.getCenterY());
+      int spawnX = random.nextInt(worldWidth);
+      int spawnY = random.nextInt(worldHeight);
 
       if (world[spawnX][spawnY].getLandType() == LandType.GRASS)
       {
-        FoodType foodType = FoodType.getRandomFood();
+        FoodType foodType;
+        if (foodSpawnList.size() == 0) foodType=FoodType.MEAT;
+        else if (foodSpawnList.size() == 1) foodType=FoodType.SEEDS;
+        else if (foodSpawnList.size() == 2) foodType=FoodType.NECTAR;
+        else foodType = FoodType.getRandomFood();
         foodSpawnList.add(new FoodSpawnSite(foodType, spawnX, spawnY, nestList.size()));
         //System.out.println("FoodSpawnSite: [ " + spawnX + ", " + spawnY + "] " + foodType);
         totalSitesToSpawn--;

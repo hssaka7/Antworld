@@ -40,10 +40,6 @@ public class ServerToClientConnection extends Thread
     {
       clientReader = new ObjectInputStream(client.getInputStream());
       clientWriter = new ObjectOutputStream(client.getOutputStream());
-
-      String msg = "ServerToClientConnection.openConnectionToClient():"+myNestName+": created clientReader & clientWriter";
-      System.out.println(msg);
-      //server.log(msg);
     }
     catch (Exception e)
     {
@@ -83,11 +79,11 @@ public class ServerToClientConnection extends Thread
       CommData data = (CommData) clientReader.readObject();
       if (DEBUG_RECEIVE) System.out.println("ServerToClientConnection[EstablishNest]: received common="+data);
       
-      activeCommData = new CommData(data.myNest, data.myTeam);
+      activeCommData = new CommData(data.myTeam);
        
-      if ((data.myNest == null) || (data.myTeam == null))
+      if (data.myTeam == null)
       { 
-        activeCommData.errorMsg = "(common.myNest == null || (common.myTeam == null)";
+        activeCommData.errorMsg = "myTeam == null)";
         closeSocket(activeCommData.errorMsg);
         return;
       }
@@ -102,13 +98,12 @@ public class ServerToClientConnection extends Thread
       //  closeSocket(activeCommData.errorMsg);
       //  return;
       //}
-      
-      
-      this.myNestName = data.myNest;
+
       this.myTeam = data.myTeam;
       
       
-      myNest = server.requestNest(myNestName, this);
+      myNest = server.assignNest(this);
+      myNestName = myNest.nestName;
       
       if (myNest == null)
       {
