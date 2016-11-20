@@ -160,13 +160,26 @@ public class AntData implements Comparable<AntData>, Serializable
     return out;
   }
 
-  /* 
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
   @Override
   public int compareTo(AntData otherAnt)
   {
     return id - otherAnt.id;
   }
 
+
+  @Override
+  public boolean equals(Object other)
+  {
+    if (other == this) return true;
+    if (other == null) return false;
+    if (!(other instanceof AntData))return false;
+    if (id == ((AntData)other).id) return true;
+    return false;
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return id;
+  }
 }

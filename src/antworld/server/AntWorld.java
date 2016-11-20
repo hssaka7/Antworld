@@ -146,22 +146,9 @@ public class AntWorld implements ActionListener
       ArrayList<AntData> antList = myNest.getAntList();
       for (AntData ant : antList)
       {
-        ant.id = Ant.restoreAntID_Hack();
-        // addAnt(ant);
+        ant.id = Ant.getNewID();
       }
     }
-
-//		for (FoodSpawnSite spawnSite : foodSpawnList) {
-//			ArrayList<FoodData> foodList = spawnSite.getFoodList();
-//			for (FoodData food : foodList) {
-//			  if (food.getCount() <= 0) 
-//			  { System.out.println("****ERROR**** " + food);
-//			  
-//				  addFood(spawnSite, food);
-//			  }
-//			}
-//		}
-
   }
 
   public int getWorldWidth()
