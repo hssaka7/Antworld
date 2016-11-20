@@ -134,8 +134,8 @@ public class AntData implements Comparable<AntData>, Serializable
     underground = source.underground;
   }
 
-  /* 
-   * Creates a formatted string showing many of this ant's fields.
+  /**
+   * @return a formatted string showing many of this ant's fields.
    */
   public String toString()
   {
@@ -150,8 +150,9 @@ public class AntData implements Comparable<AntData>, Serializable
   }
 
 
-  /*
-   * Creates a formatted string showing some of this ant's fields for compact display in the GUI mouse-over.
+  /**
+   * @return a formatted string showing some of this ant's fields for compact
+   * display in the GUI mouse-over.
    */
   public String toStringShort()
   {

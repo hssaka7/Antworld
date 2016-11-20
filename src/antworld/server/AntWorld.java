@@ -537,9 +537,11 @@ public class AntWorld implements ActionListener
   private void createFoodSpawnSite()
   {
     int totalSitesToSpawn = 3 + random.nextInt(3);
+    int xRange = worldWidth/totalSitesToSpawn;
     while (totalSitesToSpawn > 0)
     {
-      int spawnX = random.nextInt(worldWidth);
+      int spawnX = random.nextInt(xRange);
+      spawnX = spawnX + (totalSitesToSpawn-1)*xRange;
       int spawnY = random.nextInt(worldHeight);
 
       if (world[spawnX][spawnY].getLandType() == LandType.GRASS)
