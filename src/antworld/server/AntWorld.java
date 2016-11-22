@@ -56,8 +56,11 @@ public class AntWorld implements ActionListener
     this.showGUI = showGUI;
     System.out.println(title);
 
-    drawPanel = new Renderer(this, title, FRAME_WIDTH, FRAME_HEIGHT);
-    JFrame window = drawPanel.window;
+    JFrame window = null;
+    if (showGUI)
+    { drawPanel = new Renderer(this, title, FRAME_WIDTH, FRAME_HEIGHT);
+      window = drawPanel.window;
+    }
 
     //********************* Note On map replacement  **************************
     //The map must have at least a one pixel a boarder of water: LandType.WATER.getColor.
@@ -109,15 +112,21 @@ public class AntWorld implements ActionListener
 
     createHashMapsOfGameObjects();
 
-    drawPanel.initWorld(world, worldWidth, worldHeight);
-    drawPanel.repaint();
+    if (showGUI)
+    {
+      drawPanel.initWorld(world, worldWidth, worldHeight);
+      drawPanel.repaint();
+    }
 
     gameTimer = new Timer(Constants.TIME_STEP_MSEC, this);
 
     System.out.println("Done Initializing AntWorld");
     server = new Server(this, nestList);
     server.start();
-    dataViewer = new DataViewer(nestList);
+    if (showGUI)
+    {
+      dataViewer = new DataViewer(nestList);
+    }
 
     gameTimer.start();
   }
@@ -305,7 +314,7 @@ public class AntWorld implements ActionListener
     world[x][y].setAnt(ant);
     antBlocks[x / BLOCK_SIZE][y / BLOCK_SIZE].add(ant);
 
-    drawPanel.drawCell(world[x][y]);
+    if (drawPanel != null) drawPanel.drawCell(world[x][y]);
   }
 
   public void addFood(FoodSpawnSite foodSpawnSite, FoodData food)
@@ -316,7 +325,7 @@ public class AntWorld implements ActionListener
     world[x][y].setFood(foodSpawnSite, food);
     foodBlocks[x / BLOCK_SIZE][y / BLOCK_SIZE].add(food);
 
-    drawPanel.drawCell(world[x][y]);
+    if (drawPanel != null) drawPanel.drawCell(world[x][y]);
   }
 
   public void removeAnt(AntData ant)
@@ -328,7 +337,7 @@ public class AntWorld implements ActionListener
 
     world[x][y].setAnt(null);
     antBlocks[x / BLOCK_SIZE][y / BLOCK_SIZE].remove(ant);
-    drawPanel.drawCell(world[x][y]);
+    if (drawPanel != null) drawPanel.drawCell(world[x][y]);
   }
 
   public void removeFood(FoodData food)
@@ -340,7 +349,7 @@ public class AntWorld implements ActionListener
 
     world[x][y].setFood(null, null);
     foodBlocks[x / BLOCK_SIZE][y / BLOCK_SIZE].remove(food);
-    drawPanel.drawCell(world[x][y]);
+    if (drawPanel != null) drawPanel.drawCell(world[x][y]);
   }
 
   public void removeGameObj(GameObject obj)
@@ -362,8 +371,10 @@ public class AntWorld implements ActionListener
     ant.gridX = to.getLocationX();
     ant.gridY = to.getLocationY();
 
-    drawPanel.drawCell(from);
-    drawPanel.drawCell(to);
+    if (drawPanel != null)
+    {  drawPanel.drawCell(from);
+       drawPanel.drawCell(to);
+    }
     antBlocks[from.getLocationX() / BLOCK_SIZE][from.getLocationY()
       / BLOCK_SIZE].remove(ant);
     antBlocks[to.getLocationX() / BLOCK_SIZE][to.getLocationY()
@@ -524,8 +535,10 @@ public class AntWorld implements ActionListener
       }
     }
 
-    drawPanel.update();
-    dataViewer.update(nestList);
+    if (drawPanel != null)
+    {  drawPanel.update();
+      dataViewer.update(nestList);
+    }
 
     if (wallClock >= lastRestoreTime + RESTORE_FREQUENCY)
     {
@@ -591,7 +604,7 @@ public class AntWorld implements ActionListener
   {
 
     //new AntWorld(true, "restore/AntWorld_RestorePoint_2014-09-19.09-51.dat");
-    new AntWorld(true, null);
+    new AntWorld(false, null);
 
     // for (TeamNameEnum team: TeamNameEnum.values())
     // {
