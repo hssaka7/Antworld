@@ -602,15 +602,15 @@ public class AntWorld implements ActionListener
 
   public static void main(String[] args)
   {
-
-    //new AntWorld(true, "restore/AntWorld_RestorePoint_2014-09-19.09-51.dat");
-    new AntWorld(false, null);
-
-    // for (TeamNameEnum team: TeamNameEnum.values())
-    // {
-    // System.out.println("team="+team +
-    // ", s="+ServerToClientConnection.getPassword(team));
-    // }
+    boolean showGUI = true;
+    if (args != null && args.length > 0)
+    {
+      for (String field : args)
+      {
+        if (field.equals("-nogui"))  showGUI = false;
+      }
+    }
+    new AntWorld(showGUI, null);
   }
 
 }
