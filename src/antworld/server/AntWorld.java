@@ -229,16 +229,15 @@ public class AntWorld implements ActionListener
       for (int y = 0; y < worldHeight; y++)
       {
         int rgb = (map.getRGB(x, y) & 0x00FFFFFF);
-        LandType landType = LandType.GRASS;
+        LandType landType;
         int height = 0;
         if (rgb == 0x0)
         {
           landType = LandType.NEST;
-          NestNameEnum nestName = NestNameEnum.values()[Nest
-            .getNextID()];
+          NestNameEnum nestName = NestNameEnum.values()[Nest.getNextID()];
           nestList.add(new Nest(nestName, x, y));
         }
-        if (rgb == 0xF0E68C)
+        else if (rgb == 0xF0E68C)
         {
           landType = LandType.NEST;
         }
@@ -247,10 +246,8 @@ public class AntWorld implements ActionListener
           landType = LandType.WATER;
         }
         else
-        {
-          int g = (rgb & 0x0000FF00) >> 8;
-
-          height = g - 55;
+        { landType = LandType.GRASS;
+          height=LandType.getMapHeight(rgb);
         }
         // System.out.println("("+x+","+y+") rgb="+rgb +
         // ", landType="+landType
