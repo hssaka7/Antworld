@@ -20,11 +20,6 @@ public enum LandType
   GRASS
   {
     public int getMapColor() {return 0x283724;}
-    public int getMapHeight(int rgb)
-    {
-      int g = (rgb & 0x0000FF00) >> 8;
-      return Math.max(0, g - 48);
-    }
   },
   
   
@@ -41,19 +36,29 @@ public enum LandType
   public abstract int getMapColor();
   
   /**
-   * Gets the map height.
+   * Gets the map height of grass land.
+   * Note: Movement to/from grass the nest area is always a cost of 1, as is
+   * movement from nest area to nest area - regardless of encumbrance.
+   * Thus, nests can always be though of as being the height of whatever grass they touch.
    *
-   * @param rgb the rgb
+   * @param rgb the rgb of the land color
    * @return the map height
    */
-  public int getMapHeight(int rgb) {return 0;}
+  public static int getMapHeight(int rgb)
+  {
+    int g = (rgb & 0x0000FF00) >> 8;
+    return Math.max(0, g - 48);
+  }
   
   /**
    * Gets the max map height.
    *
    * @return the max map height
    */
-  public static int getMaxMapHeight() {return 200;}
+  public static int getMaxMapHeight()
+  {
+    return getMapHeight(0x0000FF00) - getMapHeight(0);
+  }
  
   
 }
