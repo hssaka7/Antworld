@@ -7,6 +7,10 @@ bin
 doc
 restore/*.dat
 *~
+
+AI_Dendrobium.java
+AntWorldPaths.png
+
 .DS_Store
 ## File-based project format:
 *.ipr

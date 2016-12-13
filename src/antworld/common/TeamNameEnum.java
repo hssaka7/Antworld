@@ -5,6 +5,7 @@ public enum TeamNameEnum
   EMPTY,
   NEARLY_BRAINLESS_BOTS, 
   RANDOM_WALKERS,
+  AI_Dendrobium,
   JudgemAnt,        //Nick & Demitri
   Allen_Brendan,
   Arthur_Phil,
@@ -25,7 +26,7 @@ public enum TeamNameEnum
   Robin_Alex,
   Sam_Dominic,
   Sarah_Beatriz,
-  Kim_Javier,
+  ANTicipation, //Kim & Javier,
   Linh_Dustin;
 
   public static TeamNameEnum getTeamByString(String name)

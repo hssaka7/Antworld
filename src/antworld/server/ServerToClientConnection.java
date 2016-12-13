@@ -44,7 +44,7 @@ public class ServerToClientConnection extends Thread
     catch (Exception e)
     {
       String msg = "ServerToClientConnection.openConnectionToClient():"+myNestName+":***ERROR***: Could not open com streams";
-      System.out.println(msg);
+      //System.out.println(msg);
       //server.log(msg);
     }
   }
@@ -77,7 +77,7 @@ public class ServerToClientConnection extends Thread
     try
     {
       CommData data = (CommData) clientReader.readObject();
-      if (DEBUG_RECEIVE) System.out.println("ServerToClientConnection[EstablishNest]: received common="+data);
+      //if (DEBUG_RECEIVE) System.out.println("ServerToClientConnection[EstablishNest]: received common="+data);
       
       activeCommData = new CommData(data.myTeam);
        
@@ -120,19 +120,19 @@ public class ServerToClientConnection extends Thread
       myNest.setNetworkStatus(NetworkStatus.CONNECTED);
       myNest.receivedMessageFromClient();
       
-      System.out.println("Server: Client Accepted: nest="+myNestName+", team="+myTeam);
+      //System.out.println("Server: Client Accepted: nest="+myNestName+", team="+myTeam);
       return;
     }
     catch (IOException e)
     {
       String msg = "ServerToClientConnection***ERROR***: client has disconnected";
-      System.err.println(msg);
+      //System.err.println(msg);
       closeSocket(msg);
     }
     catch (Exception e)
     {
       String msg = "ServerToClientConnection***ERROR***: client read failed: " + e.getMessage();
-      e.printStackTrace();
+      //e.printStackTrace();
       closeSocket(msg);
     }
   }
@@ -155,7 +155,7 @@ public class ServerToClientConnection extends Thread
     {
       String msg = "ServerToClientConnection***ERROR***: client timeout on read: ";
       
-      e.printStackTrace();
+      //e.printStackTrace();
       closeSocket(msg);
       return false;
     }
@@ -163,7 +163,7 @@ public class ServerToClientConnection extends Thread
     {
       String msg = "ServerToClientConnection***ERROR***: client read failed: " + e.getMessage();
       
-      e.printStackTrace();
+      //e.printStackTrace();
       closeSocket(msg);
       return false;
     }
@@ -207,7 +207,7 @@ public class ServerToClientConnection extends Thread
         activeCommData = data;
       }
       else
-      { if (DEBUG_SHOW_ALL_ERRORS) System.err.println("ServerToClientConnection.setCommDataFromClient():" + activeCommData.errorMsg);
+      { //if (DEBUG_SHOW_ALL_ERRORS) //System.err.println("ServerToClientConnection.setCommDataFromClient():" + activeCommData.errorMsg);
       }
     }
   }

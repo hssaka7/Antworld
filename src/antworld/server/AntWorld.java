@@ -96,6 +96,9 @@ public class AntWorld implements ActionListener
     {
       int x0 = nest.getCenterX();
       int y0 = nest.getCenterY();
+
+      System.out.println(x0+","+y0);
+
       for (int x = x0 - Constants.NEST_RADIUS; x <= x0
         + Constants.NEST_RADIUS; x++)
       {
@@ -249,30 +252,9 @@ public class AntWorld implements ActionListener
         { landType = LandType.GRASS;
           height=LandType.getMapHeight(rgb);
         }
-        // System.out.println("("+x+","+y+") rgb="+rgb +
-        // ", landType="+landType
-        // +" height="+height);
         world[x][y] = new Cell(landType, height, x, y);
       }
     }
-
-    // for (Nest nest : nestList)
-    // {
-    // int x0 = nest.getCenterX();
-    // int y0 = nest.getCenterY();
-    // for (int x = x0 - Constants.NEST_RADIUS; x <= x0 +
-    // Constants.NEST_RADIUS; x++)
-    // {
-    // for (int y = y0 - Constants.NEST_RADIUS; y <= y0 +
-    // Constants.NEST_RADIUS; y++)
-    // {
-    // if (nest.isInNest(x, y))
-    // {
-    // world[x][y].setNest(nest);
-    // }
-    // }
-    // }
-    // }
   }
 
   public Cell getCell(int x, int y)

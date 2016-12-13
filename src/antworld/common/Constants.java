@@ -15,6 +15,6 @@ public class Constants
   
   public static Random random = new Random();
   
-  public static final int PORT = 12321;
+  public static final int PORT = 5555;
 }
 

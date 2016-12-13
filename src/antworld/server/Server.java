@@ -35,18 +35,18 @@ public class Server extends Thread
   {
     this.world = world;
     this.nestList = nestList;
-    System.out.println("Server: Opening socket to listen for client connections....");
+    //System.out.println("Server: Opening socket to listen for client connections....");
     try
     {
       serverSocket = new ServerSocket(Constants.PORT, SERVER_SOCKET_BACKLOG);
     }
     catch (Exception e)
     {
-      System.err.println("Server: ***ERROR***: Opening socket failed.");
-      e.printStackTrace();
+      //System.err.println("Server: ***ERROR***: Opening socket failed.");
+      //e.printStackTrace();
       System.exit(-1);
     }
-    System.out.println("Server: socket opened on port "+Constants.PORT);
+    //System.out.println("Server: socket opened on port "+Constants.PORT);
     
     clientConnectionList = new ServerToClientConnection[nestList.size()]; 
 //    for (int i=0; i<clientConnectionList.length; i++)
@@ -76,7 +76,7 @@ public class Server extends Thread
       }
         
       Socket client = null;
-      System.out.println("Server: waiting for client connection.....");
+      //System.out.println("Server: waiting for client connection.....");
       try
       {
         client = serverSocket.accept();
@@ -84,7 +84,7 @@ public class Server extends Thread
       }
       catch (Exception e)
       {
-        System.err.println("Server ***ERROR***: Failed to connect to client.");
+        //System.err.println("Server ***ERROR***: Failed to connect to client.");
         try { client.close(); } catch (Exception e2) {}
       }
       
@@ -96,7 +96,7 @@ public class Server extends Thread
         long timeDoneConnect = System.currentTimeMillis();
         if ((timeDoneConnect - timeStartConnect) > 10*1000) 
         {
-          System.err.println("too slow connection time: " + (timeDoneConnect - timeStartConnect));
+          //System.err.println("too slow connection time: " + (timeDoneConnect - timeStartConnect));
           client.close();
           connectionBeingCreated = null;
         }
@@ -107,7 +107,7 @@ public class Server extends Thread
       }
       catch (Exception e)
       {
-        System.err.println("Server ***ERROR***: Failed to connect to client.");
+        //System.err.println("Server ***ERROR***: Failed to connect to client.");
         closeClient(connectionBeingCreated);
       }
     }
@@ -164,7 +164,7 @@ public class Server extends Thread
     {
       myClientListener.getCommData().errorMsg = "Team " + team +
         " already has established nest: "+ assignedNest.nestName;
-      System.err.println("Server() **ERROR** " + myClientListener.getCommData().errorMsg);
+      //System.err.println("Server() **ERROR** " + myClientListener.getCommData().errorMsg);
       return null;
       //if (nest.getNetworkStatus() == NetworkStatus.CONNECTED)
       //{
