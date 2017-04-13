@@ -9,7 +9,8 @@ For Spring 2017, there are two grading phases:
      Grade B: Your AI beats average SimpleSolidAI by scoring 1.5x higher.
      Grade A: Your AI beats average SimpleSolidAI by scoring >2x higher.
 
-2) Tourney: Tuesday, May 9 10:00 a.m.‐12:00 p.m.
+2) Tourney: Tuesday, May 9 10:00 a.m.‐noon p.m. in CS lab room. 
+   Snacks will be served.
    To qualify for the Tourney, your AI must score a C or better verses SimpleSolidAI.
    First Place in Tourney: +50 point and Hexbug mini robot for each member.
    Second Place in Tourney: +25 point and Hexbug mini robot for each member.
