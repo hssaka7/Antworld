@@ -1,40 +1,16 @@
 # AntWorld
-In groups of 2, write a client that connects to the Ant World server and intelligently manages an ant colony.<br>
+THIS CODE IS FROM FALL 2016!
+Do not use it yet for Spring 2017 as it will be changing greatly in the next few days.
 
-For grades of D, C, B, and A, you need to lose to, tie, beat or definitely beat the an unknown, instructor written AI of moderate smarts.<br>
+For Spring 2017, there are two grading phases:
+1) Beat the bots: This is due Friday, May 5 at midnight. 
+     Grade C: When placed in a random nest where all other nests are populated by SimpleSolidAI, your AI scores equal or slightly better 
+     than the average SimpleSolidAI score after a 1 hour game in at least 1 of two trys.
+     Grade B: Your AI beats average SimpleSolidAI by scoring 1.5x higher.
+     Grade A: Your AI beats average SimpleSolidAI by scoring >2x higher.
 
-Winning is defined as the score calculated from the total food your team has brought to the nest and your nest's ant population.<br>
-
-
-To COMPILE:<br>
-I did not include the .idea configure file since some of the setting are platform specific.<br>
-After you create an IntelliJ project with the repo source, you will need to go into Project Structure and set<br>
-Modules -> Sources -><br>
-<ul>
-   <li>Content Root: yourpath\AntWorld</li>
-   <li>Source Folders: src</li>
-   <li>Resource Folders: resources</li>
-</ul>
-
-
-Modules -> Dependencies -> <br>
-<ul>
-   <li>  1.8 (java)</li>
-   <li>  Module source</li>
-</ul>   <br>
-   
-To RUN:<br>
-First, start the server:<br>
-   antworld.server.AntWorld.main(String[] args)<br><br>
-   
-When the server is ready for a client it will display in the console:<br>
-Server: socket opened on port 12321<br>
-Server: waiting for client connection.....<br>
-
-Then, start your client. To get started, you can use the sample client:<br>
-  antworld.client.ClientRandomWalk.main(String[] args)<br>
-
-  If args is null or length < 1, then the client will try to connect on localhost.
-  Otherwise, args[0] will be used as the hostname.
-  
-  
+2) Tourney: Tuesday, May 9 10:00 a.m.‐12:00 p.m.
+   To qualify for the Tourney, your AI must score a C or better verses SimpleSolidAI.
+   First Place in Tourney: +50 point and Hexbug mini robot for each member.
+   Second Place in Tourney: +25 point and Hexbug mini robot for each member.
+   Third Place in Tourney: +15 point and Hexbug mini robot for each member.
