@@ -445,15 +445,30 @@ public class AntWorld implements ActionListener
     { myNest.updateRemoveDeadAntsFromWorld(this);
     }
 
+    NestData[] nestDataList = buildNestDataList();
+
     for (Nest myNest : nestList)
     {
-      myNest.updateSendPacket(this);
+      myNest.updateSendPacket(this, nestDataList);
     }
 
     if (drawPanel != null)
     { drawPanel.update();
       dataViewer.update(nestList);
     }
+  }
+
+
+
+  private NestData[] buildNestDataList()
+  {
+    NestData[] nestDataList = new NestData[NestNameEnum.SIZE];
+    for (int i=0; i<NestNameEnum.SIZE; i++)
+    {
+      Nest myNest = nestList.get(i);
+      nestDataList[i] = new NestData(myNest);
+    }
+    return nestDataList;
   }
 
   private void createFoodSpawnSite()

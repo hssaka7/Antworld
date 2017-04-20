@@ -151,13 +151,13 @@ public class Nest extends NestData implements Serializable
     return client.getTimeOfLastMessageFromClient();
   }
 
-  private int spawnAnt(AntType antType)
+  private AntData spawnAnt(AntType antType)
   {
     //System.out.println("Nest.spawnAnt(): " + this);
 
     if (foodInNest < antType.TOTAL_FOOD_UNITS_TO_SPAWN)
     {
-      return Ant.INVALID_ANT_ID;
+      return null;
     }
 
     foodInNest -= antType.TOTAL_FOOD_UNITS_TO_SPAWN;
@@ -167,7 +167,7 @@ public class Nest extends NestData implements Serializable
     ant.gridX = centerX;
     ant.gridY = centerY;
     antCollection.put(ant.id, ant);
-    return ant.id;
+    return ant;
   }
 
   
@@ -209,9 +209,8 @@ public class Nest extends NestData implements Serializable
       if (clientAnt.id == UNKNOWN_ANT_ID)
       {
         if (clientAnt.action.type != AntActionType.BIRTH) continue;
-        
-        int antID = spawnAnt(clientAnt.antType);
-        System.out.println("Nest.updateRecv() BIRTH antID=" + antID);
+
+        spawnAnt(clientAnt.antType);
         continue;
       }
 
@@ -258,14 +257,14 @@ public class Nest extends NestData implements Serializable
   //  return antList.get(index);
   //}
 
-  public void updateSendPacket(AntWorld world)
+  public void updateSendPacket(AntWorld world, NestData[] nestDataList)
   {
     if (team == null) return;
     if (status != NestStatus.CONNECTED) return;
 
     PacketToClient packetOut = new PacketToClient(nestName);
 
-    //packetOut.nestData = world.getNestDataList();
+    packetOut.nestData = nestDataList;
 
     packetOut.tick = world.getGameTick();
     packetOut.tickTime = world.getGameTime();

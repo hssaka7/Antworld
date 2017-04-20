@@ -166,6 +166,7 @@ public class ClientRandomWalk
    */
   public void setupNest(PacketToClient packetIn)
   {
+
     myNestName = packetIn.myNest;
     centerX = packetIn.nestData[myNestName.ordinal()].centerX;
     centerY = packetIn.nestData[myNestName.ordinal()].centerY;
@@ -229,11 +230,7 @@ public class ClientRandomWalk
 
       if (DEBUG) System.out.println("ClientRandomWalk: chooseActions: " + myNestName);
 
-      PacketToServer packetOut = new PacketToServer(myTeam);
-      //TODO: add ants from past that were NOOP or BUSY, but now can move.
-      //  These can be added to the packetIn.myAntList or to some other collection you create
-      chooseActionsOfAllAnts(packetIn, packetOut);
-
+      PacketToServer packetOut = chooseActionsOfAllAnts(packetIn);
       send(packetOut);
     }
   }
@@ -258,14 +255,19 @@ public class ClientRandomWalk
   }
 
 
-  private void chooseActionsOfAllAnts(PacketToClient packetIn, PacketToServer packetOut)
+  private PacketToServer chooseActionsOfAllAnts(PacketToClient packetIn)
   {
-    //TODO keep track of and add past ants not in current server send
+    PacketToServer packetOut = new PacketToServer(myTeam);
     for (AntData ant : packetIn.myAntList)
     {
       AntAction action = chooseAction(packetIn, ant);
-      ant.action = action;
+      if (action.type != AntActionType.NOOP)
+      {
+         ant.action = action;
+         packetOut.myAntList.add(ant);
+      }
     }
+    return packetOut;
   }
 
 

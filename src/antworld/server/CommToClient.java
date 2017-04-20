@@ -61,14 +61,9 @@ public class CommToClient extends Thread
         break;
       }
 
-      PacketToServer packetIn = read();
-      if (packetIn != null)
-      {
-        pushPacketIn(packetIn);
-      }
+
       synchronized(this)
       {
-        currentPacketOutTick = 0;
         while (currentPacketOutTick <= currentPacketInTick)
         {
           try
@@ -78,15 +73,17 @@ public class CommToClient extends Thread
           catch (InterruptedException e) {}
         }
         send(currentPacketOut);
+        currentPacketOutTick = 0;
       }
+
+      System.out.println("CommToClient.run(): nest=" + myNest.nestName +
+        " calling read()");
+      read();
+      System.out.println("CommToClient.run(): read() returned");
     }
   }
 
 
-  private synchronized void pushPacketIn(PacketToServer packetIn)
-  {
-    currentPacketIn = new PacketToServer(packetIn);
-  }
 
   public synchronized PacketToServer popPacketIn(int gameTick)
   {
@@ -102,7 +99,8 @@ public class CommToClient extends Thread
 
   public synchronized void pushPacketOut(PacketToClient packetOut, int gameTick)
   {
-    System.out.println("CommToClient.pushPacketOut(gameTick="+gameTick+")");
+    System.out.println("CommToClient.pushPacketOut(gameTick="+gameTick+") " +
+      currentPacketOutTick + " " + currentPacketInTick);
     currentPacketOutTick = gameTick;
     currentPacketOut = packetOut;
     if (currentPacketOutTick > currentPacketInTick) notify();
@@ -129,12 +127,23 @@ public class CommToClient extends Thread
     PacketToServer packetIn = read();
     if (packetIn == null) return;
 
-    myNest = server.assignNest(this, packetIn);
-    if (myNest == null)
+    synchronized (this)
     {
-      closeSocket(errorMsg);
-      return;
+      myNest = server.assignNest(this, packetIn);
+      if (myNest == null)
+      {
+        closeSocket(errorMsg);
+        return;
+      }
+
+      currentPacketIn = packetIn;
+      timeOfLastMessageFromClient = server.getContinuousTime();
+      packetIn.timeReceived = timeOfLastMessageFromClient;
+      currentPacketOutTick = 0;
+      currentPacketInTick  = server.getGameTick();
     }
+
+
       
     System.out.println("Server: Client Accepted: nest="+myNest.nestName+", team="+myNest.team);
   }
@@ -146,9 +155,11 @@ public class CommToClient extends Thread
     {
       packetIn = (PacketToServer) clientReader.readObject();
       if (DEBUG) System.out.println("CommToClient[Unknown]: received: <<<<<<======\n" + packetIn);
-
-      timeOfLastMessageFromClient = server.getContinuousTime();
-      packetIn.timeReceived = timeOfLastMessageFromClient;
+      if (packetIn == null)
+      {
+        closeSocket("!!REJECT!!: received NULL data");
+        return null;
+      }
     }
     catch (java.net.SocketTimeoutException e)
     {
@@ -167,11 +178,6 @@ public class CommToClient extends Thread
       return null;
     }
 
-    if (packetIn == null)
-    {
-      closeSocket("!!REJECT!!: received NULL data");
-      return null;
-    }
     return packetIn;
   }
 
@@ -188,6 +194,7 @@ public class CommToClient extends Thread
   
   private void send(PacketToClient data)
   {
+    System.out.println("CommToClient.send:\n" + data);
     try
     {
       if (myNest.getStatus() != NestStatus.CONNECTED)

@@ -121,6 +121,7 @@ public class Server extends Thread
   */
 
   public double getGameTime() {return world.getGameTime();}
+  public int getGameTick() {return world.getGameTick();}
   
   public Nest getNest(NestNameEnum nestName)
   {
