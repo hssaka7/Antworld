@@ -1,6 +1,15 @@
 # AntWorld
-THIS CODE IS FROM FALL 2016!
-Do not use it yet for Spring 2017 as it will be changing greatly in the next few days.
+This project contains two main() methods: one for the server: antworld.server.AntWorld
+and one for the client: antworld.client.ClientRandomWalk
+
+The server needs to be started first.
+They can be tested on one machine, but to get the full performance, the server and
+and each client should be run on different machines.
+
+
+
+
+
 
 For Spring 2017, there are two grading phases:
 1) Beat the bots: This is due Friday, May 5 at midnight. 
