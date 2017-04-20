@@ -76,24 +76,35 @@ public class CommToClient extends Thread
         currentPacketOutTick = 0;
       }
 
-      System.out.println("CommToClient.run(): nest=" + myNest.nestName +
-        " calling read()");
-      read();
-      System.out.println("CommToClient.run(): read() returned");
+      //System.out.println("CommToClient.run(): nest=" + myNest.nestName + " calling read()");
+      PacketToServer packetIn = read();
+      pushPacketIn(packetIn);
+      //System.out.println("CommToClient.run(): read() returned");
     }
   }
 
 
+  public synchronized void pushPacketIn(PacketToServer packetIn)
+  {
+    currentPacketIn = packetIn;
+    timeOfLastMessageFromClient = server.getContinuousTime();
+    packetIn.timeReceived = timeOfLastMessageFromClient;
+    currentPacketOutTick = 0;
+    currentPacketInTick  = server.getGameTick();
+    //System.out.println("pushPacketIn(): " + currentPacketIn);
+  }
+
 
   public synchronized PacketToServer popPacketIn(int gameTick)
   {
+    //System.out.println("popPacketIn(): " + currentPacketIn);
     if (currentPacketIn == null) return null;
-    {
-      PacketToServer packet = currentPacketIn;
-      currentPacketIn = null;
-      currentPacketInTick = gameTick;
-      return packet;
-    }
+
+    PacketToServer packet = currentPacketIn;
+    currentPacketIn = null;
+    currentPacketInTick = gameTick;
+    return packet;
+
   }
 
 
@@ -135,12 +146,12 @@ public class CommToClient extends Thread
         closeSocket(errorMsg);
         return;
       }
-
-      currentPacketIn = packetIn;
-      timeOfLastMessageFromClient = server.getContinuousTime();
-      packetIn.timeReceived = timeOfLastMessageFromClient;
-      currentPacketOutTick = 0;
-      currentPacketInTick  = server.getGameTick();
+      pushPacketIn(packetIn);
+      //currentPacketIn = packetIn;
+      //timeOfLastMessageFromClient = server.getContinuousTime();
+      //packetIn.timeReceived = timeOfLastMessageFromClient;
+      //currentPacketOutTick = 0;
+      //currentPacketInTick  = server.getGameTick();
     }
 
 
@@ -194,7 +205,6 @@ public class CommToClient extends Thread
   
   private void send(PacketToClient data)
   {
-    System.out.println("CommToClient.send:\n" + data);
     try
     {
       if (myNest.getStatus() != NestStatus.CONNECTED)

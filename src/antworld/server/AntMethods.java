@@ -15,7 +15,7 @@ import antworld.common.LandType;
 import antworld.common.NestNameEnum;
 import antworld.common.TeamNameEnum;
 
-public class Ant
+public class AntMethods
 {
   public static final int INVALID_ANT_ID = -7;
   private static volatile int globalAntID = -1;
@@ -52,7 +52,7 @@ public class Ant
   
   public static boolean update(AntWorld world, AntData ant, AntAction action)
   {
-    //System.out.println("Ant.update(): "+this+ ", " + action);
+    System.out.println("Ant.update(): "+ant+ "\n   =======>" + action);
     if (ant.state == AntState.OUT_AND_ABOUT)
     { if (random.nextDouble() < ant.antType.getAttritionDamageProbability()) ant.health--;
     }

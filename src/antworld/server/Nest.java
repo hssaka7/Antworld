@@ -45,10 +45,9 @@ public class Nest extends NestData implements Serializable
     super(nestName, null, x, y);
   }
 
-
   public synchronized void setClient(CommToClient client, PacketToServer packetIn)
   {
-    System.out.println("Nest.setClient: " + packetIn);
+    //System.out.println("Nest.setClient: " + packetIn);
     if (status == NestStatus.EMPTY)
     {
       antCollection.clear();
@@ -84,8 +83,8 @@ public class Nest extends NestData implements Serializable
 
 
   /**
-   * DO NOT call this method from the mainGameLoop thread as client.closeSocket() takes
-   * 100s of ticks.
+   * DO NOT call this method from the mainGameLoop thread as client.closeSocket() sleeps for
+   * 100s of ticks to make sure error message goes through before breaking socket.
    */
   public synchronized void disconnectClient()
   {
@@ -161,7 +160,7 @@ public class Nest extends NestData implements Serializable
     }
 
     foodInNest -= antType.TOTAL_FOOD_UNITS_TO_SPAWN;
-    AntData ant = Ant.createAnt(antType, nestName, team);
+    AntData ant = AntMethods.createAnt(antType, nestName, team);
     //System.out.println(ant);
 
     ant.gridX = centerX;
@@ -196,16 +195,18 @@ public class Nest extends NestData implements Serializable
 
   public void updateReceivePacket(AntWorld world)
   {
-    //System.out.println("Nest.updateReceive()==========================["+team+"]:"+commData.myAntList.size());
     // receiving common from client
     if (status != NestStatus.CONNECTED) return;
     PacketToServer packetIn = client.popPacketIn(world.getGameTick());
+    //System.out.println("Nest.updateReceive()==========================["+team+"]:"+packetIn);
+
     if (packetIn == null) return;
     
     if (packetIn.myAntList == null) return;
 
     for (AntData clientAnt : packetIn.myAntList)
     {
+      //System.out.println("######clientAnt.id= " + clientAnt.id);
       if (clientAnt.id == UNKNOWN_ANT_ID)
       {
         if (clientAnt.action.type != AntActionType.BIRTH) continue;
@@ -215,6 +216,7 @@ public class Nest extends NestData implements Serializable
       }
 
       AntData serverAnt = antCollection.get(clientAnt.id);
+      //System.out.println("ServerAnt =====> " + serverAnt);
 
       if (serverAnt == null)
       {
@@ -222,7 +224,7 @@ public class Nest extends NestData implements Serializable
         continue;
       }
 
-      boolean okay = Ant.update(world, serverAnt, clientAnt.action);
+      boolean okay = AntMethods.update(world, serverAnt, clientAnt.action);
       //if (okay)
       //{ //serverAnt.myAction.copy(clientAnt.myAction);
       //}
