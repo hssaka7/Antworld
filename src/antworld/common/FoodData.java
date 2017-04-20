@@ -4,59 +4,58 @@ import java.io.Serializable;
 
 /**
  * The Class FoodData.
- * 
- *!!!!!!!!!! DO NOT MODIFY ANYTHING IN THIS CLASS !!!!!!!!!!<br>
- * This class is serialized across a network socket. Any modifications will
- * prevent the server from being able to read this class.<br><br>
- * 
- * 
- * FoodData contains all common about a food pile game object  that is exchanged
- * between client and server.
+ *
+ * FoodData contains all data about a food pile that the
+ * server tells the client.
  * 
  */
-public class FoodData  implements Serializable 
+public class FoodData extends GameObject implements Serializable
 {
   
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = Constants.VERSION;
 
-  /** The food type. */
-  public FoodType foodType;
-  
-  /** World Map pixel coordinates of this food pile with (0,0) being upper-left. 
-   * In the ant world map, each game object (an ant or a food pile) occupies
-   * exactly one pixel. No two game objects may occupy the same pixel at the 
-   * same time. NOTE: food being carried by an ant is part of the ant game object.*/
-  public int gridX, gridY;
-  
-  /** The number of food units in the game object food pile. */
-  public int count;
+
+  /**
+   * quantity is the number of units of this food item in the pixel.
+   * The quantity can be any positive integer.
+   */
+  public int quantity;
   
   /**
-   * Instantiates a new food common.
+   * Instantiates a new FoodData given values.
    *
    * @param foodType the food type
    * @param x the x
    * @param y the y
-   * @param count the count
+   * @param quantity the quantity
    */
-  public FoodData(FoodType foodType, int x, int y, int count)
+  public FoodData(GameObjectType foodType, int x, int y, int quantity)
   {
-    this.foodType = foodType;
+    this.type = foodType;
     this.gridX = x;
     this.gridY = y;
-    this.count = count;
+    this.quantity = quantity;
   }
-  
+
+
+
   /**
-   * Gets the count.
+   * Instantiates a new FoodData from existing FoodData.
    *
-   * @return the count
+   * @param source
    */
-  public int getCount() {return count;}
+  public FoodData(FoodData source)
+  {
+    this.type =  source.type;
+    this.gridX =  source.gridX;
+    this.gridY =  source.gridY;
+    this.quantity =  source.quantity;
+  }
+
 
   public String toString()
   {
-    return foodType + ":"+count;
+    return type + ":"+quantity;
   }
 }

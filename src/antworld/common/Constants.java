@@ -4,14 +4,16 @@ import java.util.Random;
 
 public class Constants
 {
-  public static final long VERSION = 20161122L;
-  public static final int NEST_RADIUS = 20;
-  
-  public static final int INITIAL_ANT_SPAWN_COUNT = 100;
+  public static final long VERSION = 20170418L;
+  public static final int NEST_RADIUS = 15;
+
+  //public static final int INITIAL_FOOD_UNITS = 100*AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
+  public static final int INITIAL_FOOD_UNITS = 3*AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
   public static final int INITIAL_NEST_WATER_UNITS = 100;
-  public static final int TIME_STEP_MSEC = 100;
+  public static final int TIME_STEP_MSEC = 10;
+  public static final double NANO = 1e-9;
   
-  public static final int UNKNOWN_ANT_ID = -1;//use by client for ants being birthed
+
   
   public static Random random = new Random();
   

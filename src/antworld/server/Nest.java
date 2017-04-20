@@ -1,359 +1,294 @@
 package antworld.server;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
+import antworld.common.GameObject;
+import antworld.common.PacketToClient;
+import antworld.common.PacketToServer;
 import antworld.common.Util;
 import antworld.common.AntAction;
 import antworld.common.AntAction.AntActionType;
+import antworld.common.AntAction.AntState;
 import antworld.common.AntData;
 import antworld.common.AntType;
-import antworld.common.CommData;
 import antworld.common.Constants;
 import antworld.common.FoodData;
-import antworld.common.FoodType;
 import antworld.common.NestData;
 import antworld.common.NestNameEnum;
-import antworld.common.TeamNameEnum;
 
+import static antworld.common.AntData.UNKNOWN_ANT_ID;
+
+
+/**
+ * Throwing uncaught exceptions causes the server to crash.
+ * True, it is bad to have the server crash, however these
+ * IllegalArgumentExceptions will never happen.<br>
+ * So, why include them then?<br>
+ * Having a function check for and throw  IllegalArgumentExceptions is a way to
+ * document to future developers what the function is supposed to do (and not do).
+ */
 public class Nest extends NestData implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
- 
-  public enum RequireBirthResource {TRUE, FALSE};
-  public enum NetworkStatus {CONNECTED, DISCONNECTED, UNDERGROUND};
-  
-  
-  private static int idCounter = 0;
-  public static int INVALID_NEST_ID = -1;
 
-  private int[] foodStockPile = new int[FoodType.SIZE];
+  public enum NestStatus {EMPTY, CONNECTED, DISCONNECTED, UNDERGROUND};
 
-  private ArrayList<AntData> antList = new ArrayList<>();
-  
-  private volatile long timeOfLastMessageFromClient;
-  private NetworkStatus status = NetworkStatus.CONNECTED; 
-  
-  
-  
-  private static AntData tmpAntData = new AntData(Constants.UNKNOWN_ANT_ID, AntType.WORKER, null, null);
-  
-
-  
-  
+  private NestStatus status = NestStatus.EMPTY;
+  private CommToClient client = null;
+  private HashMap<Integer,AntData> antCollection = new HashMap<>();
 
   public Nest(NestNameEnum nestName, int x, int y)
   {
-    super(nestName, TeamNameEnum.NEARLY_BRAINLESS_BOTS, x, y);
-    idCounter++;
-
-    foodStockPile[FoodType.WATER.ordinal()] = Constants.INITIAL_NEST_WATER_UNITS;
-    spawnInitialAnts(null, TeamNameEnum.NEARLY_BRAINLESS_BOTS);
-    
-  }
-  
-  
-  public static NestData deepCopyNestData(NestData source)
-  {
-    NestData target = new NestData(source.nestName, source.team, source.centerX, source.centerY);
-    target.score = source.score;
-    return target;
-  }
-    
-
-
-  public void setTeam(TeamNameEnum team)
-  {
-    this.team = team;
+    super(nestName, null, x, y);
   }
 
-  public static int getNextID()
-  {
-    return idCounter;
-  }
 
-  public int getCenterX()
+  public synchronized void setClient(CommToClient client, PacketToServer packetIn)
   {
-    return centerX;
-  }
-
-  public int getCenterY()
-  {
-    return centerY;
-  }
-
-  public int getFoodStockPile(FoodType type)
-  {
-    return foodStockPile[type.ordinal()];
-  }
-
-  public ArrayList<AntData> getAntList()
-  {
-    return antList;
-  }
-
-  public void addFoodStockPile(FoodType type, int quantity)
-  {
-    foodStockPile[type.ordinal()] += quantity;
-  }
-  
-  
-  
-  public int[] copyFoodStockPile()
-  {
-    int[] copy = new int[FoodType.SIZE];
-    for (int i=0; i<FoodType.SIZE; i++)
-    { copy[i] = foodStockPile[i];
-    }
-    return copy;
-  }
-
-  public void consumeFood(FoodType type, int quantity)
-  {
-    foodStockPile[type.ordinal()] -= quantity;
-  }
-  
-  public int calculateScore()
-  {
-    int score = 0;
-    for (FoodType type : FoodType.values())
-    { 
-      if (type != FoodType.WATER) score += foodStockPile[type.ordinal()];
-    }
-    for (AntData ant : antList)
+    System.out.println("Nest.setClient: " + packetIn);
+    if (status == NestStatus.EMPTY)
     {
-      if (ant.alive) score+= AntType.TOTAL_FOOD_UNITS_TO_SPAWN/2;
+      antCollection.clear();
+      foodInNest  = Constants.INITIAL_FOOD_UNITS;
+      waterInNest = Constants.INITIAL_NEST_WATER_UNITS;
     }
-    return score;
-  }
-  
-  public long getTimeOfLastMessageFromClient() {return timeOfLastMessageFromClient;}
-  public void receivedMessageFromClient()
-  {
-    timeOfLastMessageFromClient = System.currentTimeMillis();
-  }
 
-  public void spawnInitialAnts(AntWorld world, TeamNameEnum myTeam)
-  {
-    this.team = myTeam;
-    
-    if (world != null)
-    { for (AntData ant : antList)
-      {
-        world.removeAnt(ant);
-      }
-    }
-    antList.clear();
-    for (int i = 0; i < Constants.INITIAL_ANT_SPAWN_COUNT; i++)
+    team = packetIn.myTeam;
+
+    if (team == null)
     {
-      spawnAnt(AntType.WORKER, RequireBirthResource.FALSE);
-    }
-  }
-  
-  private int spawnAnt(AntType antType, RequireBirthResource requireResource)
-  {
-    if (requireResource == RequireBirthResource.TRUE)
-    {
-      FoodType[] neededFoodList = antType.getBirthFood();
-
-      for (FoodType food : neededFoodList)
-      {
-        if (getFoodStockPile(food) < antType.getFoodUnitsToSpawn(food)) return Ant.INVALID_ANT_ID;
-      }
-
-      //If this line is reached, the nest has the required food.
-      for (FoodType food : neededFoodList)
-      {
-        consumeFood(food, antType.getFoodUnitsToSpawn(food));
-      }
+      throw new IllegalArgumentException("team == null");
     }
 
-    AntData ant = Ant.createAnt(antType, nestName, team);
-    ant.gridX = centerX;
-    ant.gridY = centerY;
-    antList.add(ant);
+    for (AntData ant : antCollection.values())
+    {
+      if (ant.state != AntState.DEAD) score+= ant.antType.getScore();
+    }
 
-    return ant.id;
+
+    for (AntData ant : packetIn.myAntList)
+    {
+      if (ant.id != AntData.UNKNOWN_ANT_ID) continue;
+      if (ant.action.type != AntActionType.BIRTH) continue;
+      if (ant.antType == null) continue;
+      spawnAnt(ant.antType);
+    }
+
+
+    this.client = client;
+    status = NestStatus.CONNECTED;
   }
 
-  
-  public void sendAllAntsUnderground(AntWorld world)
+
+  /**
+   * DO NOT call this method from the mainGameLoop thread as client.closeSocket() takes
+   * 100s of ticks.
+   */
+  public synchronized void disconnectClient()
   {
-    status = NetworkStatus.UNDERGROUND;
-    for (AntData ant : antList)
+    if (client != null)
     {
-      world.removeAnt(ant);
-      ant.underground = true;
+      client.closeSocket("Server disconnecting");
+      client = null;
+    }
+    //Do not change if status is EMPTY or UNDERGROUND
+    if (status == NestStatus.CONNECTED) status = NestStatus.DISCONNECTED;
+  }
+
+
+  public synchronized void sendAllAntsUnderground(AntWorld world)
+  {
+    if (status == NestStatus.EMPTY) return;
+    if (status == NestStatus.UNDERGROUND) return;
+
+    status = NestStatus.UNDERGROUND;
+    for (AntData ant : antCollection.values())
+    {
+      world.removeGameObject(ant);
+      ant.state = AntState.UNDERGROUND;
       ant.gridX = centerX;
       ant.gridY = centerY;
     }
   }
-  
-  public void setNetworkStatus(NetworkStatus status)
+
+
+  public int getResourceCount(GameObject.GameObjectType type)
   {
-    if ((status == NetworkStatus.DISCONNECTED) && (this.status == NetworkStatus.UNDERGROUND)) return;
-    
-    this.status = status;
+    if (type == GameObject.GameObjectType.ANT) return antCollection.size();
+    if (type == GameObject.GameObjectType.FOOD) return foodInNest;
+    return waterInNest;
+  }
+
+  public HashMap<Integer,AntData> getAnts()
+  {
+    return antCollection;
+  }
+
+  public void addFood(GameObject.GameObjectType type, int quantity)
+  {
+    if (type == GameObject.GameObjectType.WATER) waterInNest += quantity;
+    if (type == GameObject.GameObjectType.FOOD) foodInNest += quantity;
+  }
+
+  
+  public int calculateScore()
+  {
+    int score = foodInNest;
+
+    for (AntData ant : antCollection.values())
+    {
+      if (ant.state != AntState.DEAD) score+= ant.antType.getScore();
+    }
+    return score;
   }
   
-  public NetworkStatus getNetworkStatus() {return status;}
+  public double getTimeOfLastMessageFromClient()
+  {
+    if (client == null) return 0;
+    return client.getTimeOfLastMessageFromClient();
+  }
+
+  private int spawnAnt(AntType antType)
+  {
+    //System.out.println("Nest.spawnAnt(): " + this);
+
+    if (foodInNest < antType.TOTAL_FOOD_UNITS_TO_SPAWN)
+    {
+      return Ant.INVALID_ANT_ID;
+    }
+
+    foodInNest -= antType.TOTAL_FOOD_UNITS_TO_SPAWN;
+    AntData ant = Ant.createAnt(antType, nestName, team);
+    //System.out.println(ant);
+
+    ant.gridX = centerX;
+    ant.gridY = centerY;
+    antCollection.put(ant.id, ant);
+    return ant.id;
+  }
+
+  
+
+
+  
+  public NestStatus getStatus() {return status;}
   
   
   public boolean isInNest(int x, int y)
   { if (Util.manhattanDistance(centerX, centerY, x, y) <= Constants.NEST_RADIUS) return true;
     return false;
   }
-  
-  
+
+
   public void updateRemoveDeadAntsFromAntList()
   {
-    Iterator<AntData> iterator = antList.iterator();
+    Iterator iterator = antCollection.entrySet().iterator();
     while (iterator.hasNext())
     {
-      AntData ant = iterator.next();
-      if (ant.alive) ant.myAction.type = AntActionType.STASIS;
-      else iterator.remove();
+      Map.Entry pair = (Map.Entry)iterator.next();
+      AntData ant = (AntData) pair.getValue();
+      if (ant.state == AntState.DEAD) iterator.remove(); // avoids a ConcurrentModificationException
     }
   }
 
-  public void updateReceive(AntWorld world, CommData commData)
+  public void updateReceivePacket(AntWorld world)
   {
     //System.out.println("Nest.updateReceive()==========================["+team+"]:"+commData.myAntList.size());
     // receiving common from client
-    if (team == TeamNameEnum.EMPTY) return;
+    if (status != NestStatus.CONNECTED) return;
+    PacketToServer packetIn = client.popPacketIn(world.getGameTick());
+    if (packetIn == null) return;
     
+    if (packetIn.myAntList == null) return;
 
-    
-    if (commData.myAntList == null) return;
-    
-    
-//    if (nestName == NestNameEnum.HARVESTER)
-//    { AntData ant = getAntList().get(0);
-//      System.out.println(ant);
-//    }
-        
-    
-    
-    //for (AntData clientAnt : commData.myAntList)
-    for (int idx=0; idx<commData.myAntList.size(); idx++)
+    for (AntData clientAnt : packetIn.myAntList)
     {
-      AntData clientAnt = commData.myAntList.get(idx);
-      
-      if (clientAnt.id == Constants.UNKNOWN_ANT_ID)
+      if (clientAnt.id == UNKNOWN_ANT_ID)
       {
-        if (clientAnt.myAction.type != AntActionType.BIRTH) continue;
+        if (clientAnt.action.type != AntActionType.BIRTH) continue;
         
-        int antID = spawnAnt(clientAnt.antType, RequireBirthResource.TRUE);
+        int antID = spawnAnt(clientAnt.antType);
         System.out.println("Nest.updateRecv() BIRTH antID=" + antID);
         continue;
       }
-      
-      boolean legalAnt = false;
-      AntData serverAnt = null;
-      //int index = Collections.binarySearch(antList, clientAnt);
-      int serverIdx = idx;
-      if (serverIdx < antList.size())
-      { serverAnt = antList.get(serverIdx);
-        if (serverAnt.id == clientAnt.id) legalAnt = true;
-      }
-      if (!legalAnt)
-      { for (AntData ant : antList)
-        {
-          if (ant.id == clientAnt.id) 
-          { 
-            legalAnt = true;
-            serverAnt = ant;
-            break;
-          }
-        }
-      }
-      
-      
-      //System.out.println("Nest.updateRecv() ant index=" + index);
-      if (!legalAnt)
-      { 
+
+      AntData serverAnt = antCollection.get(clientAnt.id);
+
+      if (serverAnt == null)
+      {
         System.out.println("Nest.updateRecv() ant Illegal Ant =" + clientAnt);
         continue;
       }
-      
-      boolean okay = Ant.update(world, serverAnt, clientAnt.myAction);
-      if (okay)
-      { serverAnt.myAction.copyFrom(clientAnt.myAction);
-      }
+
+      boolean okay = Ant.update(world, serverAnt, clientAnt.action);
+      //if (okay)
+      //{ //serverAnt.myAction.copy(clientAnt.myAction);
+      //}
     }
   }
 
   public void updateRemoveDeadAntsFromWorld(AntWorld world)
   {
-    for (AntData ant : antList)
+    for (AntData ant : antCollection.values())
     {
-      if (!ant.alive)
+      if (ant.state == AntState.DEAD)
       {
-        world.removeAnt(ant);
-        FoodType foodType = AntType.getDeadAntFoodType();
+        world.removeGameObject(ant);
         int foodUnits = AntType.getDeadAntFoodUnits();
-        if (ant.carryUnits > 0)
+        if (ant.carryUnits > 0 && ant.carryType == GameObject.GameObjectType.FOOD)
         {
-          foodType = ant.carryType;
-          foodUnits = ant.carryUnits;
+          foodUnits += ant.carryUnits;
         }
   
-        FoodData droppedFood = new FoodData(foodType, ant.gridX, ant.gridY, foodUnits);
+        FoodData droppedFood = new FoodData(GameObject.GameObjectType.FOOD, ant.gridX, ant.gridY, foodUnits);
         world.addFood(null, droppedFood);
         //System.out.println("Nest.update() an Ant had died: Current Ant Populatuion = " + antList.size());
-        ant.myAction.type = AntAction.AntActionType.DIED;
+        ant.action.type = AntAction.AntActionType.DIED;
       }
     }
   }
 
-  public AntData getAntByID(int antId)
-  {
-    tmpAntData.id = antId;
-    int index = Collections.binarySearch(antList, tmpAntData);
-    return antList.get(index);
-  }
+  //public AntData getAntByID(int antId)
+  //{
+  //  tmpAntData.id = antId;
+  //  int index = Collections.binarySearch(antList, tmpAntData);
+  //  return antList.get(index);
+  //}
 
-  public CommData updateSendPacket(AntWorld world, CommData orgCommData)
+  public void updateSendPacket(AntWorld world)
   {
-    // sending common to client
-    
-    CommData commData = new CommData(team);
-    
-    if (orgCommData.requestNestData)
-    {
-      commData.nestData = world.createNestDataList();
-    }
-    else commData.nestData = null;
+    if (team == null) return;
+    if (status != NestStatus.CONNECTED) return;
 
-    commData.myNest = nestName;
-    commData.gameTick = AntWorld.getGameTick()+1;
-    commData.wallClockMilliSec = world.getWallClockAtLastUpdateStart();
-    commData.myAntList.clear();
-    commData.enemyAntSet = new HashSet<AntData>();
-    commData.foodSet = new HashSet<FoodData>();
-    commData.foodStockPile = foodStockPile;
-    
-    //System.out.println("foodStockPile="+Util.arrayToString(foodStockPile));
-    //System.out.println("        this="+System.identityHashCode(this));
-    
-    for (AntData ant : antList)
+    PacketToClient packetOut = new PacketToClient(nestName);
+
+    //packetOut.nestData = world.getNestDataList();
+
+    packetOut.tick = world.getGameTick();
+    packetOut.tickTime = world.getGameTime();
+    //commData.enemyAntList = new ArrayList<>();
+    //commData.foodSet = new ArrayList();
+
+
+    for (AntData ant : antCollection.values())
     {
-      commData.myAntList.add(ant);
+      packetOut.myAntList.add(ant);
       
-      world.appendAntsInProximity(ant, commData.enemyAntSet);
-      world.appendFoodInProximity(ant, commData.foodSet);
+      //world.appendAntsInProximity(ant, commData.enemyAntList);
+      //world.appendFoodInProximity(ant, commData.foodSet);
     }
-    
-    return commData;
+
+    client.pushPacketOut(packetOut, world.getGameTick());
   }
-  
+  /*
   public NestData createNestData()
   {
     NestData data = new NestData(nestName, team, centerX, centerY);
     data.score = calculateScore();
     return data;
   }
+  */
 }

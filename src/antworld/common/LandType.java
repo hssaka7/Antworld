@@ -25,7 +25,7 @@ public enum LandType
   
   /** The water. */
   WATER
-  { public int getMapColor() {return 0x1E90FF;}
+  { public int getMapColor() {return 0x329fff;}
   };
   
   /**
@@ -47,7 +47,7 @@ public enum LandType
   public static int getMapHeight(int rgb)
   {
     int g = (rgb & 0x0000FF00) >> 8;
-    return Math.max(0, g - 48);
+    return Math.max(0, g - 55);
   }
   
   /**

@@ -3,41 +3,107 @@ package antworld.common;
 import java.io.Serializable;
 
 /**
- *!!!!!!!!!! DO NOT MODIFY ANYTHING IN THIS CLASS !!!!!!!!!!<br>
- * This class is serialized across a network socket. Any modifications will
- * prevent the server from being able to read this class.<br><br>
- * 
- * Each AntData contain a reference to an AntAction instance.
- * The AntAction class is used by the client to tell the server what action
- * the corresponding ant asks to do.
- * Each nest has a unique name.
- * When a client opens a socket to the server for the first time, it must send
- * a nest name in CommData to request possession of a nest. 
- * 
- * When the client's connection request is accepted, the server will return a 
- * CommData with an array of NestData objects containing an element for each 
- * NestNameEnum below. 
+ * Each AntData contain a reference to an AntAction instance.<br><br>
+ *
+ * The client tells the server what its ants request to do in the next tick
+ * by setting each ant's action to an AntActionType and by setting
+ * the parameters required by that action type.<br><br>
+ *
+ * The following update form the server will include each of the client's
+ * ants with each ant's action types unchanged if that action was successful or
+ * set to AntActionType.BUSY if the action failed. <br><br>
+ *
+ * If an ant takes an action that requires more than one tick (such as movement),
+ * the action executes on the tick that it is initiated. Then, on all remaining turns
+ * required by that action, the ant will take the action AntActionType.BUSY.
  */
+
 
 public class AntAction implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
+  public enum AntState {UNDERGROUND, OUT_AND_ABOUT, DEAD};
+
   public enum AntActionType 
-  { MOVE,       // MOVE direction
-    ATTACK,     // ATTACK direction
-    PICKUP,     // PICKUP direction quantity
-    DROP,       // DROP direction quantity
+  {
+    /**
+     * This action requires setting the field: <tt>direction</tt>.<br><br>
+     * When set by the client, this is a request to move the ant in the
+     * specified direction.<br>
+     * When set by the server, it is a statement of where the ant moved on
+     * the preceding tick.<br><br>
+     * In most cases, the MOVE action takes more than one turn to complete.
+     * Use the methods AntType.getBaseMovementTicksPerCell(),  AntType.getUpHillMultiplier()
+     * and AntType.getEncumbranceMultiplier() to determine the movement cost.<br>
+     * Regardless of the ticks required, the move action takes place on the turn
+     * the command is given. All additional turns required by the move action will
+     * be AntActionType.BUSY
+     */
+    MOVE,
+
+    /**
+     * This action requires setting the field: <tt>direction</tt>.<br><br>
+     * The ATTACK action requires in one tick. <br>
+     * When set by the client, this is a request for the ant to attack an adjacent
+     * ant in the specified direction.<br>
+     * When set by the server, this is statement that the ant attacked the ant
+     * in the specified direction.<br><br>
+     * An ant that is underground cannot attack or be attacked.
+     */
+    ATTACK,
+
+    /**
+     * This action requires setting the fields: <tt>direction</tt> and
+     * <tt>quantity</tt>.<br><br>
+     * When set by the client, if <tt>quantity</tt> exceeds either the
+     * ant's carrying capacity or the amount of food/water in the adjacent cell
+     * in the target specified direction, the command partly fails and the ant
+     * picks up as much as it can from the specified cell.<br>
+     * When set by the server, <tt>quantity</tt> is the number of units actually
+     * picked up by the ant on and preceding tick.
+     */
+    PICKUP,
+
+
+    /**
+     * This action requires setting the fields: <tt>direction</tt> and
+     * <tt>quantity</tt>.<br><br>
+     * When set by the client, if <tt>quantity</tt> exceeds the amount of
+     * food/water the ant is carrying, the command partly fails and the ant
+     * drops all its food in the specified cell.<br>
+     * When set by the server, <tt>quantity</tt> is the number of units actually
+     * dropped by the ant on and preceding tick.<br><br>
+     *
+     * The PICKUP action requires in one tick. However,
+     * during a given tick, ant actions of a nest are executed in the order
+     * the client places them in the list.
+     * Therefore, if two ants are are separated by an empty cell, then
+     * during a single tick, one ant can DROP food in the empty cell and the other
+     * can pick it up. This is a very efficient method of transporting a heavy load
+     * of food up hill, moving the food in one tick what would have taken a single
+     * ant 16 ticks to carry.
+     */
+    DROP,
+
+
+
+    /**
+     * If the ant is above ground, then this action requires setting
+     * the field: <tt>direction</tt>.<br>
+     * If the ant is underground it can only heal itself and <tt>direction</tt>
+     * is ignored.<br><br>
+     *
+     *
+     */
     HEAL,       // HEAL direction (must be medic ant) | HEAL (must be underground)
     ENTER_NEST, // ENTER_NEST (must be on home nest area)
     EXIT_NEST,  // EXIT_NEST x y (must be underground and x,y must be in home nest area)
     BIRTH,      // Client adds new ant to antlist, sets ant type. Server deducts needed food from nest store.
-    DIED,       // 
-    STASIS      // STASIS
+    DIED,       //
+    BUSY,        //
+    NOOP      // STASIS
   }; 
-  
-  /** Every AntAction must have a type: 
-   * MOVE | ATTACK | PICKUP | DROP | HEAL | ENTER_NEST | EXIT_NEST | BIRTH |DIED | STASIS
-   */
+
   public AntActionType type;
   
   /** One of the 8 possible directions. The AntActionTypes requiring Direction 
@@ -115,7 +181,7 @@ public class AntAction implements Serializable
   
   /** Deep copies common in source into this.
    */
-  public void copyFrom(AntAction source)
+  public void copy(AntAction source)
   {
     type = source.type;
     direction = source.direction;
@@ -130,15 +196,19 @@ public class AntAction implements Serializable
    */
   public String toString()
   {
-    String out = "AntAction: ["+type+", ";
-    if (type == AntActionType.MOVE) out += direction +"]";
-    else if (type == AntActionType.ATTACK) out += direction +"]";
-    else if (type == AntActionType.PICKUP) out += direction +" "+quantity+"]";
-    else if (type == AntActionType.DROP) out += direction +" "+quantity+"]";
-    else if (type == AntActionType.HEAL) out += direction +"]";
+    String out = "AntAction: ["+type;
+    if (type == AntActionType.MOVE) out += ", " + direction +"]";
+    else if (type == AntActionType.ATTACK) out += ", " + direction +"]";
+    else if (type == AntActionType.PICKUP) out += ", " + direction +" "+quantity+"]";
+    else if (type == AntActionType.DROP) out += ", " + direction +" "+quantity+"]";
+    else if (type == AntActionType.HEAL)
+    {
+      if (direction != null) out += ", " + direction +"]";
+    }
     else if (type == AntActionType.ENTER_NEST) out += "]";
     else if (type == AntActionType.EXIT_NEST) out += "("+x + ", " + y + ")]";
-    else if (type == AntActionType.STASIS) out += "]";
+    else if (type == AntActionType.BUSY) out += ", " +quantity+"]";
+    else if (type == AntActionType.NOOP) out += "]";
     
     return out;
   }

@@ -15,11 +15,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import antworld.common.FoodType;
+import antworld.common.GameObject;
 import antworld.common.TeamNameEnum;
 import antworld.server.AntWorld;
 import antworld.server.Nest;
-import antworld.server.Nest.NetworkStatus;
+import antworld.server.Nest.NestStatus;
 
 @SuppressWarnings("serial")
 public class DataViewer extends JFrame
@@ -51,19 +51,15 @@ public class DataViewer extends JFrame
     int panelHeight = outsideHeight - insets.top - insets.bottom;
     
     
-    String[] columnNames =  new String[7+FoodType.SIZE];
+    String[] columnNames =  new String[7];
     columnNames[0] = "Nest";
     columnNames[1] = "Team";
     columnNames[2] = "Status";
-    columnNames[3] = "Center X";
-    columnNames[4] = "Center Y";
-    columnNames[5] = "Ant Count";
+    columnNames[3] = "Ant Count";
+    columnNames[4] = "Food Count";
+    columnNames[5] = "Water Count";
     columnNames[6] = "Score";
-    int i = 7;
-    for (FoodType type : FoodType.values())
-    { columnNames[i] = type.name();
-      i++;
-    }
+
    
     DefaultTableModel model_table_nestList = new DefaultTableModel(null,columnNames);  
     
@@ -137,9 +133,6 @@ public class DataViewer extends JFrame
 
   public void update(ArrayList<Nest> nestList)
   {
-
-    int avgBrainlessScore = 0;
-    int brainlessCount = 0;
     for (int row = 0; row < nestList.size(); row++)
     {
       Nest nest = nestList.get(row);
@@ -148,22 +141,15 @@ public class DataViewer extends JFrame
       table_nestList.setValueAt(nest.team, row, 1);
 
       String status = "OK";
-      if (nest.getNetworkStatus() == NetworkStatus.DISCONNECTED) status = "???";
-      else if (nest.getNetworkStatus() == NetworkStatus.UNDERGROUND) status = "---";
+      if (nest.getStatus() == NestStatus.DISCONNECTED) status = "???";
+      else if (nest.getStatus() == NestStatus.UNDERGROUND) status = "---";
 
       int score = nest.calculateScore();
       table_nestList.setValueAt(status, row, 2);
-      table_nestList.setValueAt(nest.centerX, row, 3);
-      table_nestList.setValueAt(nest.centerY, row, 4);
-      table_nestList.setValueAt(nest.getAntList().size(), row, 5);
+      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.ANT), row, 3);
+      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.FOOD), row, 4);
+      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.WATER), row, 5);
       table_nestList.setValueAt(score, row, 6);
-
-      int i = 7;
-      for (FoodType type : FoodType.values())
-      {
-          table_nestList.setValueAt(nest.getFoodStockPile(type), row, i);
-          i++;
-      }
 
       // for (int x=0; x<columnNames.length; x++)
       // {
@@ -172,16 +158,7 @@ public class DataViewer extends JFrame
       // x).getTableCellRendererComponent(table_nestList, nestData[x][y], true,
       // true, y, x).setFont(myFont);
       // }
-
-      if (nest.team == TeamNameEnum.NEARLY_BRAINLESS_BOTS)
-      {
-        avgBrainlessScore += score;
-        brainlessCount++;
-      }
-
     }
-    avgBrainlessScore =  avgBrainlessScore/brainlessCount;
-    this.setTitle(AntWorld.title + " Avg Brainless Score = " + avgBrainlessScore);
   }
 
 }

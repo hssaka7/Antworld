@@ -2,32 +2,27 @@ package antworld.common;
 
 public enum TeamNameEnum
 {
-  EMPTY,
-  NEARLY_BRAINLESS_BOTS, 
-  RANDOM_WALKERS,
-  AI_Dendrobium,
-  JudgemAnt,        //Nick & Demitri
-  Allen_Brendan,
-  Arthur_Phil,
-  Atle_Caleb,
-  Connor_Rob,
-  Daniel_Corey,
-  Ederin_Dominic,
-  Forrest_Michael,
-  Hector_Haijin,
-  Jaehee_Edgar,
-  John_Mauricio,
-  Josh_Anton,
-  Katrina_William,
-  Kenneth_Germaine,
-  Kevin_Sahba,
-  Michael_Joaquin,
-  Nathan_Nicholas,
-  Robin_Alex,
-  Sam_Dominic,
-  Sarah_Beatriz,
-  ANTicipation, //Kim & Javier,
-  Linh_Dustin;
+  RandomWalkers,
+  Army,
+  Bullet,
+  Carpenter,
+  Fire,
+  Formica,
+  Harvester,
+  Pharaoh,
+  Weaver,
+  SimpleSolid_0,
+  SimpleSolid_1,
+  SimpleSolid_2,
+  SimpleSolid_3,
+  SimpleSolid_4,
+  SimpleSolid_5,
+  SimpleSolid_6,
+  SimpleSolid_7,
+  SimpleSolid_8,
+  SimpleSolid_9,
+  SimpleSolid_10,
+  SimpleSolid_11;
 
   public static TeamNameEnum getTeamByString(String name)
   {

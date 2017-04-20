@@ -1,99 +1,130 @@
 package antworld.common;
-/**
- *!!!!!!!!!! DO NOT MODIFY ANYTHING IN THIS CLASS !!!!!!!!!!<br>
- * This class is serialized across a network socket. Any modifications will
- * prevent the server from being able to read this class.<br><br>
- */
 
-//new int[] {10,20,30,40,50,60,71,80,90,91};
+import antworld.common.AntAction.AntState;
+/**
+ * This game supports 3 types of ants: WORKER, EXPLORER and WARRIOR.
+ * Each type of ant overrides different default capability values. For example,
+ * WORKER ants can carry more food or water units than other ants.
+ */
 public enum AntType
 {
-  ATTACK 
-  {
-    public FoodType[] getBirthFood() {return ATTACK_FOOD;}
-    public int getMaxAttackDamage() {return super.getAttackDiceD4()*2;}
-  },
-
-  DEFENCE
-  { public FoodType[] getBirthFood() {return DEFENCE_FOOD;}
-    public int getMaxHealth() {return super.getMaxHealth()*2;}
-  },
-
-  MEDIC
-  { public FoodType[] getBirthFood() {return MEDIC_FOOD;}
-    public int getHealPointsPerWaterUnit() {return super.getHealPointsPerWaterUnit()*2;}
-  },
-
-  SPEED
-  {
-    public FoodType[] getBirthFood() {return SPEED_FOOD;}
-    public int getBaseMovementTicksPerCell() {return super.getBaseMovementTicksPerCell()/2;}
-  }, 
-  
-  VISION
-  {
-    public FoodType[] getBirthFood() {return VISION_FOOD;}
-    public int getVisionRadius() {return super.getVisionRadius()*2;}
-  },
-
   WORKER
-  { public FoodType[] getBirthFood() {return WORKER_FOOD;}
+  {
     public int getCarryCapacity() {return super.getCarryCapacity()*2;}
+    public int getHealWaterUnitsPerTick(AntState state)
+    { return super.getHealWaterUnitsPerTick(state)*2;
+    }
+  },
+
+
+  EXPLORER
+    {
+      public int getBaseMovementTicksPerCell()
+      { return Math.max(1,super.getBaseMovementTicksPerCell()/3);
+      }
+
+      public int getVisionRadius() {return super.getVisionRadius()*2;}
+    },
+
+
+  WARRIOR
+  {
+    public int getMaxHealth() {return super.getMaxHealth()*2;}
+    public int getAttackDiceD4() {return super.getAttackDiceD4()*2;}
   };
 
-  
-  
-  //==========================================================================
-  private static final FoodType[] ATTACK_FOOD = {FoodType.MEAT};
-  private static final FoodType[] DEFENCE_FOOD = {FoodType.MEAT, FoodType.SEEDS};
-  private static final FoodType[] MEDIC_FOOD = {FoodType.MEAT, FoodType.NECTAR};
-  private static final FoodType[] SPEED_FOOD = {FoodType.NECTAR};
-  private static final FoodType[] VISION_FOOD = {FoodType.NECTAR, FoodType.SEEDS};
-  private static final FoodType[] WORKER_FOOD = {FoodType.SEEDS};
-
-
-  public static final int TOTAL_FOOD_UNITS_TO_SPAWN = 10;
-
-  public int getFoodUnitsToSpawn(FoodType type)
-  {
-    FoodType[] birthFood = getBirthFood();
-    int units = TOTAL_FOOD_UNITS_TO_SPAWN/birthFood.length;
-    for (FoodType food : birthFood)
-    {
-      if (type == food) return units;
-    }
-    return 0;
-  }
-
-  public abstract FoodType[] getBirthFood();
-  public int getMaxHealth() {return 20;}
+  public static final int SIZE = AntType.values().length;
+  public static final int TOTAL_FOOD_UNITS_TO_SPAWN = 4;
+  public int getMaxHealth() {return 25;}
 
   /**
    * @return  The number of 4-sided dice rolled and summed to calculate the damage.
-   * That is, the actual damage is the sum of n uniformly distributed random numbers from 1
-   * through 4.
+   * That is, the actual damage is the sum of <i>n</i> uniformly distributed random
+   * numbers from 1 through 4.
    */
   public int getAttackDiceD4() {return 2;}
 
   /**
-   * Each turn an ant spends above ground, it has a chance of taking 1 point of damage.
-   * It takes 2 turns for an unencumbered ant to move across flat grass and 4 turns if it is
-   * carrying a full load. Therefore, ant that needs to travel from its nest to a food source
-   * across the map and return with a full load, will take (not counting hills and obstacles)
-   * 5000*2 + 5000*4 = 30,000 turns (about 50 minutes of wall-clock time).
-   * For an ant at full health (20HP) to do be able to make such a trip and return with
-   * half damage, the probability of damage per turn is 10*(1/30,000) = 0.0003333.
+   * Each turn an ant is out and about it has a chance of taking attrition damage.
+   * Ants that are underground (inside the nest) never take attrition damage.
    * @return the probability that each ant takes 1 point of damage each time step it spends
-   * outside the nest.
+   * outside the nest. The average damage rate is 3 points of damage per minute.
    */
-  public double getAttritionDamageProbability() {return 0.0002;}
+  public double getAttritionDamageProbability() {return 0.005;}
+
+  /**
+   * This function returns the base movement speed of a non-EXPLORER ant. <br>
+   * When moving to cell at a higher elevation, this base is multiplied by getUpHillMultiplier().<br>
+   * When an ant is encumbered (carrying more than half its capacity), this base is
+   *   multiplied by getEncumbranceMultiplier().
+   * @return number of game ticks required to move unencumbered ant on flat terrain.
+   */
   public int getBaseMovementTicksPerCell() {return 2;}
-  public int getUpHillMultiplier() {return 5;}
-  public int getHalfEncumbranceMultiplier() {return 2;}
-  
-  public int getVisionRadius() {return 30;}
-  public int getCarryCapacity() {return 25;}
-  public static int getDeadAntFoodUnits() {return 5;}
-  public static FoodType getDeadAntFoodType() {return FoodType.MEAT;}
-  public int getHealPointsPerWaterUnit() {return 1;}
+
+
+  /**
+   * Each land pixel on the map has an elevation defined by the green channel of its color.
+   * When an ant moves to an adjacent pixel at a higher elevation than its current pixel its
+   * movement cost is multiplied by the factor returned by this function.
+   * @return multiplier to getBaseMovementTicksPerCell()
+   */
+  public int getUpHillMultiplier() {return 2;}
+
+
+  /**
+   * Each ant has a carrying capacity. Any ant carrying more than half its capacity
+   * has a reduced movement rate.
+   * @return multiplier to getBaseMovementTicksPerCell()
+   */
+  public int getEncumbranceMultiplier() {return 2;}
+
+
+  /**
+   * Fog of War is a major mechanic of this game. <br>
+   * Each tick, the server notifies the client of food and enemy ants that are within
+   * the vision radius of one or more of its ants.<br>
+   * An ant with a vision radius of 10 will perceive food and enemy ants within a
+   * 21x21 pixel square area that is centered on the ant.<br><br>
+   *
+   * If your nest has at least one ant underground, then you can perceive all game objects
+   * (ants, food or water droplets) within your nest radius.
+   * @return Ant perception distance on the map in pixels.
+   */
+  public int getVisionRadius() {return 10;}
+
+
+  /**
+   * An ant can carry food or water, but not both at the same time.
+   * @return Maximum number of food or water units an ant can carry.
+   */
+  public int getCarryCapacity() {return 7;}
+
+  /**
+   * An ant can heal itself or an ant that is 8-direction adjacent.
+   * Each unit of water consumed by an ant heals that ant by one health point up
+   * to its max health.
+   * @return the maximum number of water units on one tick that this ant can consume
+   * to heal target ant.
+   */
+  public int getHealWaterUnitsPerTick(AntState state)
+  {
+    if (state == AntState.OUT_AND_ABOUT) return 1;
+    if (state == AntState.UNDERGROUND) return 4;
+    return 9999999; //the dead cannot heal.
+  }
+
+
+  /**
+   * When an ant dies, it is removed from the game and replaced
+   * by a food object.
+   * The number of food units it is replaced by is equal to the sum of
+   * the value returned by this function plus any food units it was carrying.
+   * Any water the ant was carrying is lost.
+   * @return Units of food that an ant becomes when it dies.
+   */
+  public static final int getDeadAntFoodUnits() {return 2;}
+
+
+
+  public int getScore() {return TOTAL_FOOD_UNITS_TO_SPAWN-1;}
 }

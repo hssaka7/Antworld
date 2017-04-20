@@ -2,9 +2,10 @@ package antworld.server;
 
 import antworld.common.AntData;
 import antworld.common.FoodData;
+import antworld.common.GameObject;
 import antworld.common.LandType;
 import antworld.common.NestNameEnum;
-import antworld.server.GameObject.GameObjectType;
+import antworld.common.GameObject.GameObjectType;
 
 public class Cell 
 {
@@ -34,17 +35,19 @@ public class Cell
   public boolean isEmpty() {if (gameObject == null) return true; else return false;}
   
   public GameObject getGameObject() { return gameObject;}
-  
-  public AntData getAnt() 
-  { 
+
+  public FoodData getFood()
+  {
     if (gameObject == null) return null;
-    return gameObject.ant;
+    if (gameObject.type == GameObjectType.ANT) return null;
+    return (FoodData) gameObject;
   }
-  
-  public FoodData getFood()  
-  { 
+
+  public AntData getAnt()
+  {
     if (gameObject == null) return null;
-    return gameObject.food;
+    if (gameObject.type != GameObjectType.ANT) return null;
+    return (AntData) gameObject;
   }
   
   
@@ -54,17 +57,9 @@ public class Cell
     return nest.nestName;
   }
   
-  public void setAnt(AntData ant) 
+  public void setGameObject(GameObject obj)
   { 
-    if (ant == null) gameObject = null;
-    else gameObject = new GameObject(ant);
-  }
-  
-  
-  public void setFood(FoodSpawnSite foodSpawnSite, FoodData food) 
-  { 
-    if (food == null) gameObject = null;
-    else gameObject = new GameObject(foodSpawnSite, food);
+    gameObject = obj;
   }
   
   
@@ -81,18 +76,13 @@ public class Cell
   { 
     if (gameObject != null)
     {
-      if(gameObject.type == GameObjectType.ANT) return 0xD7240D;
-    
-      else
-      {
-        return gameObject.food.foodType.getColor();
-      }
+      return gameObject.getRGB();
     }
     
     if (landType == LandType.WATER) return landType.getMapColor();
     if (landType == LandType.NEST)
     { 
-      if ((x == nest.getCenterX()) && (y == nest.getCenterY())) return 0x0;
+      if ((x == nest.centerX) && (y == nest.centerY)) return 0x0;
       return landType.getMapColor();
     }
     if (landType == LandType.GRASS)

@@ -1,19 +1,17 @@
 package antworld.server;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Random;
 
 import antworld.common.Constants;
 import antworld.common.FoodData;
-import antworld.common.FoodType;
+import antworld.common.GameObject;
 import antworld.common.LandType;
 import antworld.common.NestNameEnum;
 
 public class FoodSpawnSite implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
-  private FoodType foodType;
   private int locationX, locationY;
   private static final int SPAWN_RADIUS = 30;
   private static final int NUMBER_OF_SPAWNS_PER_RESET = 100;
@@ -24,9 +22,8 @@ public class FoodSpawnSite implements Serializable
   private int activeFoodPileCount = 0;
   private boolean needSpawn = true;
   
-  public FoodSpawnSite(FoodType type, int x, int y, int totalNestCount)
-  { 
-    this.foodType = type;
+  public FoodSpawnSite(int x, int y, int totalNestCount)
+  {
     this.locationX = x;
     this.locationY = y;
     didNestGatherFromThisSiteRecently = new boolean[totalNestCount];
@@ -83,7 +80,7 @@ public class FoodSpawnSite implements Serializable
       if (myCell.getLandType() != LandType.GRASS) continue;
       if (!myCell.isEmpty())  continue;
 
-      FoodData foodPile = new FoodData(foodType, x, y, count);
+      FoodData foodPile = new FoodData(GameObject.GameObjectType.FOOD, x, y, count);
       world.addFood(this, foodPile);
       spawnCount++;
       activeFoodPileCount++;
@@ -95,7 +92,7 @@ public class FoodSpawnSite implements Serializable
   
   public String toString()
   {
-    return "FoodSpawnSite: [" + foodType + "] ("+locationX+", "+locationY + ") activeFoodPileCount=" + activeFoodPileCount +
+    return "FoodSpawnSite: ("+locationX+", "+locationY + ") activeFoodPileCount=" + activeFoodPileCount +
         ", needSpawn=" + needSpawn;
   }
   

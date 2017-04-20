@@ -6,17 +6,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.swing.*;
 
 import antworld.common.AntData;
 import antworld.common.FoodData;
-import antworld.common.FoodType;
 import antworld.common.Util;
 import antworld.server.AntWorld;
 import antworld.server.Cell;
 import antworld.server.Nest;
+import antworld.common.AntAction.AntState;
 
 public class Renderer extends JPanel implements KeyListener, MouseListener, MouseMotionListener,
     MouseWheelListener, ComponentListener, ActionListener
@@ -41,8 +42,8 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
   
   private double mouseX, mouseY, mouseDownX, mouseDownY;
   private final int MIN_REPAINT_MSEC = 100;
-  private static final double ZOOM_IN_MAX = 16;
-  private static final double ZOOM_OUT_MIN = 0.25;
+  private static final double ZOOM_IN_MAX = 8;
+  private static final double ZOOM_OUT_MIN = 0.42;
   private static final Color[] COLOR_ANT = {new Color(160,0,0, 120), new Color(204, 85, 0, 120), new Color(218, 165, 32, 120)};
   private static final int ANT_PIXEL_SIZE = 16;
   
@@ -51,6 +52,8 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
   private final Font fontNest = new Font ("SansSerif", Font.BOLD , 28);
   private final Font fontAnt = new Font ("SansSerif", Font.BOLD , 3);
   private FontMetrics fontMetrics;
+
+  private static final Color PURPLE = new Color(120, 81, 169);
   
   //private ArrayList<Nest> nestList;
   private AntWorld antworld;
@@ -215,7 +218,7 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
     int elapsed = (int) (tick - lastRepaintTick);
     lastRepaintTick = tick;
     
-    window.setTitle(windowTitle + "  " + AntWorld.getGameTick());
+    window.setTitle(windowTitle + "  " + antworld.getGameTick());
 
 
     gfx.setTransform(new AffineTransform());
@@ -254,10 +257,10 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
           gfx.setColor(COLOR_ANT[renderNestCount % COLOR_ANT.length]);
           
           
-          ArrayList<AntData> antList = nest.getAntList();
-          for (AntData ant : antList)
+          HashMap<Integer,AntData> antCollection = nest.getAnts();
+          for (AntData ant : antCollection.values())
           {
-            if (ant.underground) continue;
+            if (ant.state != AntState.OUT_AND_ABOUT) continue;
             double x = ant.gridX - (int) (antScale / 2);
             double y = ant.gridY - (int) (antScale / 2);
             Rectangle2D.Double shape = new Rectangle2D.Double(x, y, antScale, antScale);
@@ -294,12 +297,9 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
         }
       }
 
-
+/*
       //Render food
-      gfx.setColor(new Color(FoodType.getColor()));
-      HashSet<FoodData>[][] foodBlocks = antworld.getFoodBlocks();
-      int worldWidthInBlocks = antworld.getWorldWidthInBlocks();
-      int worldHeightInBlocks = antworld.getWorldHeightInBlocks();
+      gfx.setColor(PURPLE);
       double foodScale = ANT_PIXEL_SIZE / scale;
       for (int i = 0; i < worldWidthInBlocks; ++i)
       {
@@ -322,14 +322,14 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
 
                   gfx.setFont(fontAnt);
                   gfx.drawString(food.toString(), (int) x, (int) y);
-                  gfx.setColor(new Color(FoodType.getColor()));
+                  gfx.setColor(PURPLE);
                 }
               }
             }
           }
         }
 
-
+*/
 
       
       if (!mouseDragging)
