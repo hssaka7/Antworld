@@ -27,7 +27,7 @@ public class AntAction implements Serializable
   public enum AntActionType 
   {
     /**
-     * This action requires setting the field: <tt>direction</tt>.<br><br>
+     * MOVE action requires setting the field: <tt>direction</tt>.<br><br>
      * When set by the client, this is a request to move the ant in the
      * specified direction.<br>
      * When set by the server, it is a statement of where the ant moved on
@@ -42,7 +42,7 @@ public class AntAction implements Serializable
     MOVE,
 
     /**
-     * This action requires setting the field: <tt>direction</tt>.<br><br>
+     * ATTACK action requires setting the field: <tt>direction</tt>.<br><br>
      * The ATTACK action requires in one tick. <br>
      * When set by the client, this is a request for the ant to attack an adjacent
      * ant in the specified direction.<br>
@@ -53,7 +53,7 @@ public class AntAction implements Serializable
     ATTACK,
 
     /**
-     * This action requires setting the fields: <tt>direction</tt> and
+     * PICKUP action requires setting the fields: <tt>direction</tt> and
      * <tt>quantity</tt>.<br><br>
      * When set by the client, if <tt>quantity</tt> exceeds either the
      * ant's carrying capacity or the amount of food/water in the adjacent cell
@@ -66,7 +66,7 @@ public class AntAction implements Serializable
 
 
     /**
-     * This action requires setting the fields: <tt>direction</tt> and
+     * DROP action requires setting the fields: <tt>direction</tt> and
      * <tt>quantity</tt>.<br><br>
      * When set by the client, if <tt>quantity</tt> exceeds the amount of
      * food/water the ant is carrying, the command partly fails and the ant
@@ -88,27 +88,81 @@ public class AntAction implements Serializable
 
 
     /**
-     * If the ant is above ground, then this action requires setting
-     * the field: <tt>direction</tt>. A direction == null is a self heal.<br>
+     * HEAL action requires a <tt>direction</tt> if the ant is above ground.
+     * An above ground ant can heal itself by setting <tt>direction=null</tt>.<br>
      * If the ant is underground it can only heal itself and <tt>direction</tt>
      * is ignored.<br><br>
-     *
-     *
+     * The HEAL action requires water. If the ant is above ground, it must be carrying the
+     * water. If the ant is underground, the water is subtracted from its nest.
+     * Each unit of water heals one Health point. The max amount of water units that
+     * can be consumed for healing in a single tick is given by
+     * AntType.getHealWaterUnitsPerTick(AntState state).
      */
     HEAL,
-    ENTER_NEST, // ENTER_NEST (must be on home nest area)
-    EXIT_NEST,  // EXIT_NEST x y (must be underground and x,y must be in home nest area)
-    BIRTH,      // Client adds new ant to antlist, sets ant type. Server deducts needed food from nest store.
-    DIED,       //
-    BUSY,        //
+
+
+    /**
+     * ENTER_NEST action requires that the ant is near its nest.
+     */
+    ENTER_NEST,
+
+
+    /**
+     * EXIT_NEST action requires setting the fields <tt>x</tt> and <tt>y</tt> to specify
+     * the exit location. The ant must be underground and the location must be within the nest
+     * radius.
+     */
+    EXIT_NEST,
+
+
+    /**
+     * BIRTH is an action that can only be preformed on a new ant instance created by the client.<br>
+     * The client must use the client constructor that sets the ant's id to AntData.UNKNOWN_ANT_ID.<br>
+     * For this action to be successful, the client's nest must have sufficient food in its nest
+     * (see AntType.TOTAL_FOOD_UNITS_TO_SPAWN). <br>
+     * The client constructor allows the client to specify any ant type.
+     */
+    BIRTH,
+
+
+
+    /**
+     * DIED is an action set by the server for an ant that did nothing else but die that turn.
+     * Sometimes an ant's status will be DEAD, but its action might be something else, such as
+     * ATTACK, if it was able to do that action before it died.
+     */
+    DIED,
+
+    /**
+     * Many move actions require more than a single tick. In such cases, the move actually occurs
+     * on the turn the MOVE action was specified, but the ant is frozen from all actions until
+     * <tt>AntAction.quantity</tt> reaches 0 ticks remaining. On ticks when an ant is BUSY, it is
+     * not included in a nest's myAntList, unless it takes damage from another ant.
+     */
+    BUSY,
+
+
+
+    /**
+     * BUSY_ATTACKED is an ant that is BUSY and has taken damage from another ant.
+     */
     BUSY_ATTACKED,
-    NOOP      // STASIS
+
+
+    /**
+     * NOOP (No Operation) is set by the client to indicate this ant is to do nothing this next
+     * game tick. NOOP is set by the server if either a requested action failed or if no action
+     * was specified.
+     */
+    NOOP
   }; 
 
   public AntActionType type;
-  
+
+
   /** One of the 8 possible directions. The AntActionTypes requiring Direction 
-   * are: MOVE, ATTACK, PICKUP, DROP, HEAL (when executed by a medic ant outside of the nest)
+   * are: MOVE, ATTACK, PICKUP, DROP, HEAL (when OUT_AND_ABOUT). Set to null to
+   * indicate a self-heal or self-attack.
    */
   public Direction direction;
   
@@ -123,6 +177,8 @@ public class AntAction implements Serializable
   
   
   /** Specifies a quantity needed by the PICKUP and DROP ant actions.
+   * Set by the server after a MOVE action to give the ticks remaining before
+   * that ant may take any other action.
    */
   public int quantity;
   
