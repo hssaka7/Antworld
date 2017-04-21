@@ -1,5 +1,19 @@
 package antworld.common;
 
+
+/**
+ *  To check all directions around a location (x0, y0), use:<br>
+ *     for (Direction dir : Direction.values())<br>
+ *     {<br>
+ *        int x = x0 + dir.deltaX();<br>
+ *        int y = y0 + dir.deltaY();<br>
+ *     }<br><br>
+ *
+ *  Most methods that expect a direction, if given null, will assume the current location is being
+ *  indicated (deltaX and deltaY == 0).
+ */
+
+
 public enum Direction 
 { NORTH
   { public int deltaX() {return  0;}

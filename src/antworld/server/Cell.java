@@ -36,7 +36,7 @@ public class Cell
   
   public GameObject getGameObject() { return gameObject;}
 
-  public FoodData getFood()
+  public FoodData getFoodOrWater()
   {
     if (gameObject == null) return null;
     if (gameObject.type == GameObjectType.ANT) return null;

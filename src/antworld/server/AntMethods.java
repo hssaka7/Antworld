@@ -9,7 +9,6 @@ import antworld.common.AntData;
 import antworld.common.AntType;
 import antworld.common.Constants;
 import antworld.common.FoodData;
-import antworld.common.GameObject;
 import antworld.common.GameObject.GameObjectType;
 import antworld.common.LandType;
 import antworld.common.NestNameEnum;
@@ -17,94 +16,65 @@ import antworld.common.TeamNameEnum;
 
 public class AntMethods
 {
-  public static final int INVALID_ANT_ID = -7;
   private static volatile int globalAntID = -1;
   private static Random random = Constants.random;
+  private static final boolean DEBUG = false;
 
   
   public static AntData createAnt(AntType type, NestNameEnum nestName, TeamNameEnum teamName)
   {
-    int id = getNewID();
-    
+    globalAntID++;
+    int id = globalAntID;
     return new AntData(id, type, nestName, teamName);
   }
 
-  
-  public static synchronized int getNewID()
-  {
-    globalAntID++;
-    return globalAntID;
-  }
-  
-  public static int getAttackDamage(AntData ant)
-  {
-    int damage = 0;
-    int dice = ant.antType.getAttackDiceD4();
-    for (int i=0; i<dice; i++)
-    {
-      //add a uniformly distributed integer 1, 2, 3 or 4.
-      damage += random.nextInt(4) + 1;
-    }
-    return damage;
-  }
+
   
 
   
-  public static boolean update(AntWorld world, AntData ant, AntAction action)
+  public static AntActionType update(AntWorld world, AntData ant, AntAction action)
   {
-    System.out.println("Ant.update(): "+ant+ "\n   =======>" + action);
-    if (ant.state == AntState.OUT_AND_ABOUT)
-    { if (random.nextDouble() < ant.antType.getAttritionDamageProbability()) ant.health--;
-    }
-    
-    if (ant.health < 0) ant.state = AntState.DEAD;
-    if (ant.state == AntState.DEAD) return false;
+    if (DEBUG) System.out.println("Ant.update(): "+ant+ "\n   =======>" + action);
 
-    if (ant.action.type == AntActionType.BUSY)
-    {
-      if (ant.action.quantity > 0)
-      { ant.action.quantity--;
-        return false;
-      }
-    }
+    if (ant.state == AntState.DEAD) return AntActionType.DIED;
+
+    //Note: this should never be true since this method should not be called in this case.
+    if (ant.action.type == AntActionType.BIRTH) return AntActionType.BIRTH;
+
+    //Note: MOVE to BUSY and BUSY quantity is updated before this method is called.
+    if (ant.action.type == AntActionType.BUSY) return AntActionType.BUSY;
+
     
     if (action == null || action.type == AntActionType.NOOP || action.type == AntActionType.BUSY)
     {
-      ant.action.type = AntActionType.NOOP;
-      return false;
+      return AntActionType.NOOP;
     }
 
-    
-   
-    //The birth action is handled in Nest so nothing to do here.
-    if (action.type == AntActionType.BIRTH) return true;
 
     if (action.type == AntActionType.EXIT_NEST)
     {
-      if (ant.state != AntState.UNDERGROUND) return false;
+      if (ant.state != AntState.UNDERGROUND) return AntActionType.NOOP;
       Cell exitCell = world.getCell(action.x,action.y);
-      //System.out.println("     ..... EXIT_NEST: exitCell="+exitCell + "("+ action.x+", " +action.y+")");
-      
-      if (exitCell == null) return false;
-      if (!exitCell.isEmpty()) return false;
-      if (exitCell.getNestName() != ant.nestName) return false;
+
+      if (exitCell == null) return AntActionType.NOOP;
+      if (!exitCell.isEmpty()) return AntActionType.NOOP;
+      if (exitCell.getNestName() != ant.nestName) return AntActionType.NOOP;
       
       ant.gridX = action.x;
       ant.gridY = action.y;
       ant.state = AntState.OUT_AND_ABOUT;
       world.addAnt(ant);
-      
-      return true;
+      return AntActionType.EXIT_NEST;
     }
     
     if (action.type == AntActionType.ENTER_NEST)
     {
-      if (ant.state != AntState.OUT_AND_ABOUT) return false;
-      if (world.getCell(ant.gridX, ant.gridY).getNestName() != ant.nestName) return false;
+      if (ant.state != AntState.OUT_AND_ABOUT) return AntActionType.NOOP;
+      if (world.getCell(ant.gridX, ant.gridY).getNestName() != ant.nestName) return AntActionType.NOOP;
 
       ant.state = AntState.UNDERGROUND;
       world.removeGameObject(ant);
-      return true;
+      return AntActionType.ENTER_NEST;
     }
    
     Nest myNest = world.getNest(ant.nestName);
@@ -112,43 +82,57 @@ public class AntMethods
     if (action.type == AntActionType.HEAL)
     { 
       if (ant.state == AntState.UNDERGROUND)
-      { if (ant.health >= ant.antType.getMaxHealth()) return false;
-        if (myNest.getResourceCount(GameObjectType.WATER) < 1) return false;
-        myNest.addFood(GameObjectType.WATER, -1);
-        ant.health ++;
-        return true;
+      { if (ant.health >= ant.antType.getMaxHealth()) return AntActionType.NOOP;
+        if (myNest.getWaterCount() < 1) return AntActionType.NOOP;
+        int waterUnits = ant.antType.getHealWaterUnitsPerTick(AntState.UNDERGROUND);
+        if (waterUnits > myNest.getWaterCount()) waterUnits = myNest.getWaterCount();
+        if (waterUnits+ant.health > ant.antType.getMaxHealth())
+        {
+          waterUnits = ant.antType.getMaxHealth()-ant.health;
+        }
+        myNest.addResource(GameObjectType.WATER, -waterUnits);
+        ant.health +=waterUnits;
+        return AntActionType.HEAL;
       }
       
+      //OUT_AND_ABOUT heal
+      if (ant.carryType != GameObjectType.WATER) return AntActionType.NOOP;
+      if (ant.carryUnits <= 0) return AntActionType.NOOP;
 
-      if (ant.carryType != GameObjectType.WATER) return false;
-      if (ant.carryUnits <= 0) return false;
+      //Note: it is ok for target ant to be self
       AntData targetAnt = getTargetAnt(world, ant, action);
-      if (targetAnt == null) return false;
+      if (targetAnt == null) return AntActionType.NOOP;
       
-      if (targetAnt.health >= targetAnt.antType.getMaxHealth()) return false;
-      ant.carryUnits--;
-      targetAnt.health ++;
-      return true;
+      if (targetAnt.health >= targetAnt.antType.getMaxHealth()) return AntActionType.NOOP;
+      int waterUnits = ant.antType.getHealWaterUnitsPerTick(AntState.OUT_AND_ABOUT);
+      if (waterUnits > ant.carryUnits) waterUnits = ant.carryUnits;
+      if (waterUnits + targetAnt.health > targetAnt.antType.getMaxHealth())
+      {
+        waterUnits = targetAnt.antType.getMaxHealth() - targetAnt.health;
+      }
+      ant.carryUnits -= waterUnits;
+      targetAnt.health += waterUnits;
+      return AntActionType.HEAL;
     }
       
     if (action.type == AntActionType.ATTACK)
     {
       AntData targetAnt = getTargetAnt(world, ant, action);
-      if (targetAnt == null) return false;
+      //Note: it is possible for an ant to attack itself by setting attack direction to null.
+      if (targetAnt == null) return AntActionType.NOOP;
       targetAnt.health -= getAttackDamage(ant);
-      return true;
+      if (targetAnt.action.type == AntActionType.BUSY) targetAnt.action.type = AntActionType.BUSY_ATTACKED;
+      return AntActionType.ATTACK;
     }
     
     
     if (action.type == AntActionType.MOVE)
     {
+      if (ant.state != AntState.OUT_AND_ABOUT) return AntActionType.NOOP;
       Cell cellTo = getTargetCell(world, ant, action);
-      if (cellTo == null) return false;
-      if (cellTo.getLandType() == LandType.WATER) return false;
-      
-      if (ant.state != AntState.OUT_AND_ABOUT) return false;
-
-      if (!cellTo.isEmpty()) return false;
+      if (cellTo == null) return AntActionType.NOOP;
+      if (cellTo.getLandType() == LandType.WATER) return AntActionType.NOOP;
+      if (!cellTo.isEmpty()) return AntActionType.NOOP;
       Cell cellFrom = world.getCell(ant.gridX, ant.gridY);
 
       ant.action.quantity = ant.antType.getBaseMovementTicksPerCell();
@@ -156,76 +140,60 @@ public class AntMethods
       if (ant.carryUnits > ant.antType.getCarryCapacity()/2)
       { ant.action.quantity *= ant.antType.getEncumbranceMultiplier();
       }
-      ant.action.type = AntActionType.BUSY;
+      ant.action.quantity--; //one tick of movement has just been spent.
       world.moveAnt(ant, cellFrom, cellTo);
-
-      return true;
+      return AntActionType.MOVE;
     }
     
     if (action.type == AntActionType.DROP)
     {
-      if (ant.carryType == null) return false;
-      if (ant.carryUnits <= 0) return false;
-      if (action.quantity <= 0) return false;
+      if (ant.carryType == null) return AntActionType.NOOP;
+      if (ant.carryUnits <= 0) return AntActionType.NOOP;
+      if (action.quantity <= 0) return AntActionType.NOOP;
       
       
       if (action.quantity > ant.carryUnits) action.quantity = ant.carryUnits;
       if (ant.state == AntState.UNDERGROUND)
       { 
-    	  myNest.addFood(ant.carryType, action.quantity);
-        ant.carryUnits -= action.quantity;
-        if (ant.carryUnits == 0) ant.carryType = null;
-        //System.out.println("Ant.DROP "+ ant);
-        
-        return true;
-      }
-      
-      
-      Cell targetCell = getTargetCell(world, ant, action);
-      if (targetCell == null) return false;
-      if (targetCell.getLandType() == LandType.NEST)
-      {
-    	//System.out.println("Ant.DROP-- landtype: nest = " + targetCell.getNest().nestName 
-    	//		+ ", food[" + ant.carryType + "] drop="+action.quantity + 
-    	//		"stockPile="+targetCell.getNest().getFoodStockPile(ant.carryType));
-        targetCell.getNest().addFood(ant.carryType, action.quantity);
-        //System.out.println("       After drop: stockPile="+targetCell.getNest().getFoodStockPile(ant.carryType));
-        
-        //System.out.println("        targetCell.getNest()="+System.identityHashCode(targetCell.getNest()));
-        //System.out.println("Ant.DROP in Nest"+ targetCell.getNestName() + "["+ant.carryType+"]="+ant.carryUnits );
+    	  myNest.addResource(ant.carryType, action.quantity);
       }
       else
-      { if (!targetCell.isEmpty()) return false;
+      {
+        Cell targetCell = getTargetCell(world, ant, action);
+        if (targetCell == null) return AntActionType.NOOP;
+        if (!targetCell.isEmpty()) return AntActionType.NOOP;
       
         int x = targetCell.getLocationX();
         int y = targetCell.getLocationY();
         FoodData droppedFood = new FoodData(ant.carryType, x, y, ant.carryUnits);
         world.addFood(null, droppedFood);
       }
+
       ant.carryUnits -= action.quantity;
       if (ant.carryUnits == 0) ant.carryType = null;
-      return true;
+      return AntActionType.DROP;
     }
     
     
     if (action.type == AntActionType.PICKUP)
     {
-      if (action.quantity <=0) return false;
+      if (ant.state != AntState.OUT_AND_ABOUT) return AntActionType.NOOP;
+      if (action.quantity <=0) return AntActionType.NOOP;
       Cell targetCell = getTargetCell(world, ant, action);
-      if (targetCell == null) return false;
+      if (targetCell == null) return AntActionType.NOOP;
       FoodData groundFood = null;
 
       if (targetCell.getLandType() == LandType.WATER)
       { 
-        if ((ant.carryUnits > 0) && (ant.carryType!=GameObjectType.WATER)) return false;
+        if ((ant.carryUnits > 0) && (ant.carryType!=GameObjectType.WATER)) return AntActionType.NOOP;
         ant.carryType = GameObjectType.WATER;
       }
       else
       {  
-        groundFood = targetCell.getFood();
-        if (groundFood == null) return false;
+        groundFood = targetCell.getFoodOrWater();
+        if (groundFood == null) return AntActionType.NOOP;
 
-        if ((ant.carryUnits > 0) && (ant.carryType!=groundFood.type)) return false;
+        if ((ant.carryUnits > 0) && (ant.carryType!=groundFood.type)) return AntActionType.NOOP;
         if (action.quantity > groundFood.quantity) action.quantity = groundFood.quantity;
         ant.carryType = groundFood.type;
       }
@@ -237,22 +205,36 @@ public class AntMethods
         groundFood.quantity -=action.quantity;
         if (groundFood.quantity <= 0) world.removeGameObject(groundFood);
       }
-      
-      
-      return true;
+      return AntActionType.PICKUP;
     }
-    
-    return false;
+    return AntActionType.NOOP;
   }
-  
-  
+
+
+  public static int getAttackDamage(AntData ant)
+  {
+    int damage = 0;
+    int dice = ant.antType.getAttackDiceD4();
+    for (int i=0; i<dice; i++)
+    {
+      //add a uniformly distributed integer 1, 2, 3 or 4.
+      damage += random.nextInt(4) + 1;
+    }
+    return damage;
+  }
+
+
+
 
   
   private static Cell getTargetCell(AntWorld world, AntData ant, AntAction action)
   {
-    if (action.direction == null) return null;
-    int targetX = ant.gridX + action.direction.deltaX();
-    int targetY = ant.gridY + action.direction.deltaY();
+    int targetX = ant.gridX;
+    int targetY = ant.gridY;
+    if (action.direction != null)
+    { targetX += action.direction.deltaX();
+      targetY += action.direction.deltaY();
+    }
     return world.getCell(targetX, targetY);
   }
 

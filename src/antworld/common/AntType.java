@@ -35,6 +35,7 @@ public enum AntType
 
   public static final int SIZE = AntType.values().length;
   public static final int TOTAL_FOOD_UNITS_TO_SPAWN = 4;
+  public static final int SCORE_PER_ANT = 3;
   public int getMaxHealth() {return 25;}
 
   /**
@@ -110,7 +111,7 @@ public enum AntType
   {
     if (state == AntState.OUT_AND_ABOUT) return 1;
     if (state == AntState.UNDERGROUND) return 4;
-    return 9999999; //the dead cannot heal.
+    return 0; //the dead cannot heal.
   }
 
 
@@ -123,8 +124,4 @@ public enum AntType
    * @return Units of food that an ant becomes when it dies.
    */
   public static final int getDeadAntFoodUnits() {return 2;}
-
-
-
-  public int getScore() {return TOTAL_FOOD_UNITS_TO_SPAWN-1;}
 }

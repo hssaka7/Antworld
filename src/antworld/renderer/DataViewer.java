@@ -144,12 +144,11 @@ public class DataViewer extends JFrame
       if (nest.getStatus() == NestStatus.DISCONNECTED) status = "???";
       else if (nest.getStatus() == NestStatus.UNDERGROUND) status = "---";
 
-      int score = nest.calculateScore();
       table_nestList.setValueAt(status, row, 2);
-      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.ANT), row, 3);
-      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.FOOD), row, 4);
-      table_nestList.setValueAt(nest.getResourceCount(GameObject.GameObjectType.WATER), row, 5);
-      table_nestList.setValueAt(score, row, 6);
+      table_nestList.setValueAt(nest.getAntCount(), row, 3);
+      table_nestList.setValueAt(nest.getFoodCount(), row, 4);
+      table_nestList.setValueAt(nest.getWaterCount(), row, 5);
+      table_nestList.setValueAt(nest.score, row, 6);
 
       // for (int x=0; x<columnNames.length; x++)
       // {

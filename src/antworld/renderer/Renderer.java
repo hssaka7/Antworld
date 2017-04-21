@@ -7,13 +7,10 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import javax.swing.*;
 
 import antworld.common.AntData;
-import antworld.common.FoodData;
-import antworld.common.Util;
 import antworld.server.AntWorld;
 import antworld.server.Cell;
 import antworld.server.Nest;
@@ -268,7 +265,7 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
 
             // int xx = (int)((mouseX - translateX)/scale);
             // int yy = (int)((mouseY - translateY)/scale);
-            // if (nest.isInNest(x,y))
+            // if (nest.isNearNest(x,y))
             // int xx = (int)((ant.gridX*scale) + translateX);
             // int yy = (int)((ant.gridY*scale) + translateY);
             if (!mouseDragging && scale >= ZOOM_OUT_MIN/2)
@@ -339,7 +336,7 @@ public class Renderer extends JPanel implements KeyListener, MouseListener, Mous
         for (Nest nest: nestList)
         { 
           //System.out.println("nest: ("+nest.centerX+", "+nest.centerY+")  mouse: ("+x+", "+y+")");
-          if (nest.isInNest(x,y))
+          if (nest.isNearNest(x,y))
           {
             gfx.setFont(fontNest);
             AffineTransform transform = new AffineTransform();

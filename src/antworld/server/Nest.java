@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 import antworld.common.GameObject;
 import antworld.common.PacketToClient;
 import antworld.common.PacketToServer;
 import antworld.common.Util;
-import antworld.common.AntAction;
 import antworld.common.AntAction.AntActionType;
 import antworld.common.AntAction.AntState;
 import antworld.common.AntData;
@@ -33,6 +33,8 @@ import static antworld.common.AntData.UNKNOWN_ANT_ID;
 public class Nest extends NestData implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
+  private static final boolean DEBUG = false;
+  private static Random random = Constants.random;
 
   public enum NestStatus {EMPTY, CONNECTED, DISCONNECTED, UNDERGROUND};
 
@@ -45,28 +47,23 @@ public class Nest extends NestData implements Serializable
     super(nestName, null, x, y);
   }
 
+
+  /**
+   * Called by CommToClient when a new client socket connection is made.
+   * @param client all socket and communication data an methods client being assigned this nest.
+   * @param packetIn raw data packet from client which may or may not request to spawn new ants
+   *                 on this first packet.
+   */
   public synchronized void setClient(CommToClient client, PacketToServer packetIn)
   {
-    //System.out.println("Nest.setClient: " + packetIn);
+    team = packetIn.myTeam;
+
     if (status == NestStatus.EMPTY)
     {
       antCollection.clear();
       foodInNest  = Constants.INITIAL_FOOD_UNITS;
       waterInNest = Constants.INITIAL_NEST_WATER_UNITS;
     }
-
-    team = packetIn.myTeam;
-
-    if (team == null)
-    {
-      throw new IllegalArgumentException("team == null");
-    }
-
-    for (AntData ant : antCollection.values())
-    {
-      if (ant.state != AntState.DEAD) score+= ant.antType.getScore();
-    }
-
 
     for (AntData ant : packetIn.myAntList)
     {
@@ -75,7 +72,6 @@ public class Nest extends NestData implements Serializable
       if (ant.antType == null) continue;
       spawnAnt(ant.antType);
     }
-
 
     this.client = client;
     status = NestStatus.CONNECTED;
@@ -98,6 +94,10 @@ public class Nest extends NestData implements Serializable
   }
 
 
+  /**
+   * Called by main game loop of AntWorld when a client has not sent a data package in a long time.
+   * @param world
+   */
   public synchronized void sendAllAntsUnderground(AntWorld world)
   {
     if (status == NestStatus.EMPTY) return;
@@ -114,35 +114,45 @@ public class Nest extends NestData implements Serializable
   }
 
 
-  public int getResourceCount(GameObject.GameObjectType type)
-  {
-    if (type == GameObject.GameObjectType.ANT) return antCollection.size();
-    if (type == GameObject.GameObjectType.FOOD) return foodInNest;
-    return waterInNest;
-  }
+  public int getFoodCount() { return foodInNest; }
+
+  public int getWaterCount() { return waterInNest;}
+  public int getAntCount() { return antCollection.size();}
+
+
 
   public HashMap<Integer,AntData> getAnts()
   {
     return antCollection;
   }
 
-  public void addFood(GameObject.GameObjectType type, int quantity)
+
+  /**
+   * Adds (or subtracts if quantity is <0) the specified quantity of the
+   * specified type to this nest.
+   * @param type (must be FOOD or WATER, not ANT)
+   * @param quantity (units to add or subtract if <0)
+   */
+  public void addResource(GameObject.GameObjectType type, int quantity)
   {
     if (type == GameObject.GameObjectType.WATER) waterInNest += quantity;
     if (type == GameObject.GameObjectType.FOOD) foodInNest += quantity;
   }
 
-  
-  public int calculateScore()
-  {
-    int score = foodInNest;
 
-    for (AntData ant : antCollection.values())
-    {
-      if (ant.state != AntState.DEAD) score+= ant.antType.getScore();
-    }
-    return score;
+  /**
+   * Calculates and sets the current score of this nest. Each client's goal is to maximize this value
+   * by the end of the game. The score is based on the food in this nest and the number of
+   * living ants belonging to this nest. Food carried by ants does not count towards the score.
+   */
+  public void calculateScore()
+  {
+    if (status == NestStatus.EMPTY) score = 0;
+    score = foodInNest + antCollection.size()*AntType.SCORE_PER_ANT;
   }
+
+
+
   
   public double getTimeOfLastMessageFromClient()
   {
@@ -150,10 +160,17 @@ public class Nest extends NestData implements Serializable
     return client.getTimeOfLastMessageFromClient();
   }
 
+
+  /**
+   * Attempts to spawn a new ant in this nest. The attempt fails if there is
+   * insufficient food.<br><br>
+   * On success, the newly spawned ant is added to this nest's ant collection.
+   * @param antType to spawn
+   * @return an instance of the newly spawned ant or null of attempt failed.
+   */
   private AntData spawnAnt(AntType antType)
   {
     //System.out.println("Nest.spawnAnt(): " + this);
-
     if (foodInNest < antType.TOTAL_FOOD_UNITS_TO_SPAWN)
     {
       return null;
@@ -169,68 +186,121 @@ public class Nest extends NestData implements Serializable
     return ant;
   }
 
-  
 
-
-  
+  /**
+   * @return The status of this nest which may be:
+   * <ul>
+   *     <li>EMPTY (not yet assigned to any client), </li>
+   *     <li>CONNECTED (assigned to and receiving updates from a client),</li>
+   *     <li>DISCONNECTED (assigned to a client with a dropped socket connection),</li>
+   *     <li>UNDERGROUND (assigned to a client that has been disconnected for a long time and its ants
+   *     have been returned to its nest).</li>
+   * </ul>
+   */
   public NestStatus getStatus() {return status;}
-  
-  
-  public boolean isInNest(int x, int y)
+
+
+  /**
+   * @param x east/west pixel (== cell) location on world map.
+   * @param y north/south pixel (== cell) location on world map.
+   * @return true iff the specified location is within the yellow colored area surrounding this nest.
+   */
+  public boolean isNearNest(int x, int y)
   { if (Util.manhattanDistance(centerX, centerY, x, y) <= Constants.NEST_RADIUS) return true;
     return false;
   }
 
 
-  public void updateRemoveDeadAntsFromAntList()
+  /**
+   * Update automatic ant events of all ants in this nest. Automatic events include:
+   * <ol>
+   *    <li>Attrition damage.</li>
+   *    <li>Removing ants that died last tick from ant sets.</li>
+   *    <li>Decrementing move/busy time.</li>
+   *    <li>Changing last turn's actions to default NOOP</li>
+   * </ol>
+   */
+  public void updateAutomaticAntEvents()
   {
+    //Note: this iterator allows removing items without a ConcurrentModificationException
     Iterator iterator = antCollection.entrySet().iterator();
     while (iterator.hasNext())
     {
       Map.Entry pair = (Map.Entry)iterator.next();
       AntData ant = (AntData) pair.getValue();
-      if (ant.state == AntState.DEAD) iterator.remove(); // avoids a ConcurrentModificationException
+      if (ant.state == AntState.DEAD)
+      { iterator.remove();
+        continue;
+      }
+
+      if (ant.action.type == AntActionType.MOVE || ant.action.type == AntActionType.BUSY)
+      {
+        if (ant.action.quantity > 0) ant.action.quantity--;
+        if (ant.action.quantity > 0) ant.action.type = AntActionType.BUSY;
+        else ant.action.type = AntActionType.NOOP;
+      }
+      else ant.action.type = AntActionType.NOOP;
+
+
+      //Note: This must be done after removal of dead ants since it could cause an
+      //  ant to die and newly dead ants are left in the list for one tick.
+      if (ant.state == AntState.OUT_AND_ABOUT)
+      { if (random.nextDouble() < ant.antType.getAttritionDamageProbability()) ant.health--;
+        if (ant.health < 0) ant.state = AntState.DEAD;
+      }
     }
   }
 
+
+  /**
+   * Applies client ant action requests. Note: no changes in this loop are made to
+   *   ants belonging to a client that the client does not include in their return package nor
+   *   for which a valid action is not provided.
+   * @param world
+   */
   public void updateReceivePacket(AntWorld world)
   {
-    // receiving common from client
-    if (status != NestStatus.CONNECTED) return;
     PacketToServer packetIn = client.popPacketIn(world.getGameTick());
-    //System.out.println("Nest.updateReceive()==========================["+team+"]:"+packetIn);
 
     if (packetIn == null) return;
     
     if (packetIn.myAntList == null) return;
 
+
+    //Loop through and execute legal actions of each ant in the ant list sent by the client.<br>
+    // Ant actions are applied in the ant list order.
     for (AntData clientAnt : packetIn.myAntList)
     {
-      //System.out.println("######clientAnt.id= " + clientAnt.id);
+      //Birth action
       if (clientAnt.id == UNKNOWN_ANT_ID)
       {
         if (clientAnt.action.type != AntActionType.BIRTH) continue;
-
-        spawnAnt(clientAnt.antType);
-        continue;
+        spawnAnt(clientAnt.antType); //Only succeeds is needed food exists.
       }
 
-      AntData serverAnt = antCollection.get(clientAnt.id);
-      //System.out.println("ServerAnt =====> " + serverAnt);
-
-      if (serverAnt == null)
+      else
       {
-        System.out.println("Nest.updateRecv() ant Illegal Ant =" + clientAnt);
-        continue;
-      }
+        //Search the server's copy of this nest's ant collection for an ant with
+        //id matching the clientAnt id.<br>
+        //Ignore the request if the client attempts to command an ant not in its collection.
+        AntData serverAnt = antCollection.get(clientAnt.id);
 
-      boolean okay = AntMethods.update(world, serverAnt, clientAnt.action);
-      //if (okay)
-      //{ //serverAnt.myAction.copy(clientAnt.myAction);
-      //}
+        if (serverAnt == null)
+        {
+          if (DEBUG) System.out.println("Nest.updateReceivePacket(): Illegal Ant =" + clientAnt);
+          continue;
+        }
+        serverAnt.action.type = AntMethods.update(world, serverAnt, clientAnt.action);
+      }
     }
   }
 
+
+  /**
+   * Ants that die are left in the ant collection for one game tick, but are instantly
+   * replaced in the world by a food stack.
+   * @param world
+   */
   public void updateRemoveDeadAntsFromWorld(AntWorld world)
   {
     for (AntData ant : antCollection.values())
@@ -246,8 +316,10 @@ public class Nest extends NestData implements Serializable
   
         FoodData droppedFood = new FoodData(GameObject.GameObjectType.FOOD, ant.gridX, ant.gridY, foodUnits);
         world.addFood(null, droppedFood);
-        //System.out.println("Nest.update() an Ant had died: Current Ant Populatuion = " + antList.size());
-        ant.action.type = AntAction.AntActionType.DIED;
+        if (DEBUG) System.out.println("Nest[" + nestName +
+          "] Ant died: Current Population = " + antCollection.size());
+        //Note: an ant may have done some action this tick before dieing.
+        //   This will have been recorded in ant.action.type.
       }
     }
   }
@@ -276,20 +348,14 @@ public class Nest extends NestData implements Serializable
 
     for (AntData ant : antCollection.values())
     {
+      if (ant.action.type == AntActionType.BUSY) continue;
       packetOut.myAntList.add(ant);
-      
+
+      //TODO
       //world.appendAntsInProximity(ant, commData.enemyAntList);
       //world.appendFoodInProximity(ant, commData.foodSet);
     }
 
     client.pushPacketOut(packetOut, world.getGameTick());
   }
-  /*
-  public NestData createNestData()
-  {
-    NestData data = new NestData(nestName, team, centerX, centerY);
-    data.score = calculateScore();
-    return data;
-  }
-  */
 }

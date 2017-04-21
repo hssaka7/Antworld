@@ -6,28 +6,29 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+import javax.swing.Timer;
+import javax.swing.JFrame;
+import javax.swing.JFileChooser;
 import javax.imageio.ImageIO;
-import javax.swing.*;
 
 import antworld.common.AntAction;
 import antworld.common.AntData;
 import antworld.common.Constants;
+import antworld.common.Direction;
 import antworld.common.FoodData;
 import antworld.common.GameObject;
 import antworld.common.LandType;
 import antworld.common.NestData;
 import antworld.common.NestNameEnum;
-import antworld.common.PacketToServer;
 import antworld.common.TeamNameEnum;
 import antworld.common.Util;
-import antworld.common.GameObject.GameObjectType;
-import antworld.common.AntAction.AntActionType;
 import antworld.server.Nest.NestStatus;
 import antworld.renderer.DataViewer;
 import antworld.renderer.Renderer;
 
 public class AntWorld implements ActionListener
 {
+  private static final boolean DEBUG = true;
   public static Random random = Constants.random;
   public static final int FRAME_WIDTH = 1200;
   public static final int FRAME_HEIGHT = 700;
@@ -95,7 +96,7 @@ public class AntWorld implements ActionListener
         for (int y = y0 - Constants.NEST_RADIUS; y <= y0
           + Constants.NEST_RADIUS; y++)
         {
-          if (nest.isInNest(x, y))
+          if (nest.isNearNest(x, y))
           {
             world[x][y].setNest(nest);
           }
@@ -120,6 +121,91 @@ public class AntWorld implements ActionListener
     }
     gameTimer.start();
     server.start();
+  }
+
+
+
+  /**
+   * Advance simulation one gameTick
+   * @param e ignored since the only event is the timer.
+   */
+  public void actionPerformed(ActionEvent e)
+  {
+    gameTick++;
+    gameTime = server.getContinuousTime();
+
+    if (DEBUG) System.out.println("AntWorld =====> Tick=" + gameTick + " (" + gameTime + ")");
+
+    if (random.nextDouble() < 0.01)
+    {
+      int foodSiteIdx = random.nextInt(foodSpawnList.size());
+      foodSpawnList.get(foodSiteIdx).spawn(this);
+    }
+
+
+
+    //Update non-interactive events of all ants in world. Non-interactive events include:
+    //    Attrition damage
+    //    Removing ants that died last tick from ant sets.
+    //    Decrementing move/busy time.
+    //    Changing last turn's actions to default NOOP
+    for (Nest myNest : nestList)
+    {
+      if (myNest.getStatus() == NestStatus.EMPTY) continue;
+      if (myNest.getStatus() == NestStatus.UNDERGROUND) continue;
+      myNest.updateAutomaticAntEvents();
+    }
+
+
+    //This loop applies client ant action requests. Note: no changes in this loop are made to
+    //   ants belonging to a client that the client does not include in their return package nor
+    //   for which a valid action is not provided.
+    //TODO: visit in receive order
+    for (Nest myNest : nestList)
+    {
+      if (myNest.getStatus() == NestStatus.EMPTY) continue;
+      if (myNest.getStatus() == NestStatus.UNDERGROUND) continue;
+
+      if (gameTime > myNest.getTimeOfLastMessageFromClient() + Server.TIMEOUT_CLIENT_TO_UNDERGROUND)
+      {
+        myNest.sendAllAntsUnderground(this);
+        continue;
+      }
+      if (myNest.getStatus() != NestStatus.CONNECTED) continue;
+
+      myNest.updateReceivePacket(this);
+    }
+
+
+
+
+    //Newly dead ants are left for one turn in the ant list, but in the world,
+    //  they are immediately replaced with food piles.
+    for (Nest myNest : nestList)
+    {
+      myNest.calculateScore();
+      myNest.updateRemoveDeadAntsFromWorld(this);
+    }
+
+    //The server's Nest array is of Nest objects (which extend NestData items).
+    //This copies, by value, all data from the server's array to the array sent to clients.
+    NestData[] nestDataList = buildNestDataList();
+
+
+
+    //Build and mark as ready, PacketToClient for each client.
+    // Note: the actual sending of this packet is done in each client's worker thread.
+    for (Nest myNest : nestList)
+    {
+      myNest.updateSendPacket(this, nestDataList);
+    }
+
+
+    //Update display, if not headless.
+    if (drawPanel != null)
+    { drawPanel.update();
+      dataViewer.update(nestList);
+    }
   }
 
 
@@ -218,77 +304,6 @@ public class AntWorld implements ActionListener
   }
 
 
-  private void smoothMap(BufferedImage map)
-  {
-    int[] DX={0,-1,0,1};
-    int[] DY={-1,0,1,0};
-
-    //int n = worldWidth*worldHeight*20;
-    int n = worldWidth*worldHeight*2;
-    for (int i = 0; i < n; i++)
-    {
-      int x = Constants.random.nextInt(worldWidth-3)+1;
-      int y = Constants.random.nextInt(worldHeight-3)+1;
-
-      int rgb0 = (map.getRGB(x, y) & 0x00FFFFFF);
-      if (rgb0 == LandType.WATER.getMapColor()) continue;
-
-      int r = (rgb0 & 0x00FF0000) >> 16;
-      int g = (rgb0 & 0x0000FF00) >> 8;
-      int b = rgb0 & 0x000000FF;
-
-      int dist = 1;
-      //if (i < n/1)
-      //{ dist = Constants.random.nextInt(12)+Constants.random.nextInt(12)+1;
-      //}
-
-      int count = 1;
-      for (int k=0; k<DX.length; k++)
-      {
-        int xx = x+DX[k]*dist;
-        int yy = y+DY[k]*dist;
-
-        if (xx < 1) xx = 1;
-        if (yy < 1) yy = 1;
-        if (xx > worldWidth-3)  xx = worldWidth-3;
-        if (yy > worldHeight-3) yy = worldHeight-3;
-
-        int rgb = (map.getRGB(xx, yy) & 0x00FFFFFF);
-        if (rgb == LandType.WATER.getMapColor()) rgb = rgb0;
-
-        count++;
-        r += (rgb & 0x00FF0000) >> 16;
-        g += (rgb & 0x0000FF00) >> 8;
-        b += rgb & 0x000000FF;
-
-      }
-      r /= count;
-      g /= count;
-      b /= count;
-      rgb0 = (r<<16) | (g<<8) | b;
-      map.setRGB(x, y, rgb0);
-
-    }
-
-    JFileChooser fileChooser = new JFileChooser();
-
-    int returnValue = fileChooser.showSaveDialog(null);
-
-    if (returnValue != JFileChooser.APPROVE_OPTION) return;
-
-    File inputFile = fileChooser.getSelectedFile();
-    String path = inputFile.getAbsolutePath();
-    if ((path.endsWith(".png") == false) && (path.endsWith(".PNG") == false))
-    { path = path+".png";
-    }
-
-    File myFile = new File(path);
-    try
-    { ImageIO.write(map, "png", myFile);
-    }
-    catch (Exception e){ e.printStackTrace();}
-  }
-
 
 
 
@@ -304,18 +319,6 @@ public class AntWorld implements ActionListener
     return world[x][y];
   }
 
-  public Nest getNest(int x, int y)
-  {
-
-    if (x < 0 || y < 0 || x >= worldWidth || y >= worldHeight)
-    {
-      // System.out.println("AntWorld().getCell(" + x + ", " + y +
-      // ") worldWidth=" + worldWidth + ", worldHeight="
-      // + worldHeight);
-      return null;
-    }
-    return world[x][y].getNest();
-  }
 
   public void addAnt(AntData ant)
   {
@@ -411,52 +414,7 @@ public class AntWorld implements ActionListener
   }
 */
 
-  public void actionPerformed(ActionEvent e)
-  {
-    gameTick++;
-    gameTime = server.getContinuousTime();
 
-    if (random.nextDouble() < 0.01)
-    {
-      int foodSiteIdx = random.nextInt(foodSpawnList.size());
-      foodSpawnList.get(foodSiteIdx).spawn(this);
-    }
-
-    // System.out.println("AntWorld:: Timer " + gameTick);
-    for (Nest myNest : nestList)
-    { myNest.updateRemoveDeadAntsFromAntList();
-    }
-
-    for (Nest myNest : nestList)
-    {
-      if (myNest.team == null) continue;
-      if (myNest.getStatus() == NestStatus.UNDERGROUND) continue;
-
-      if (gameTime > myNest.getTimeOfLastMessageFromClient() + Server.TIMEOUT_CLIENT_TO_UNDERGROUND)
-      {
-        myNest.sendAllAntsUnderground(this);
-        continue;
-      }
-
-      myNest.updateReceivePacket(this);
-    }
-
-    for (Nest myNest : nestList)
-    { myNest.updateRemoveDeadAntsFromWorld(this);
-    }
-
-    NestData[] nestDataList = buildNestDataList();
-
-    for (Nest myNest : nestList)
-    {
-      myNest.updateSendPacket(this, nestDataList);
-    }
-
-    if (drawPanel != null)
-    { drawPanel.update();
-      dataViewer.update(nestList);
-    }
-  }
 
 
 
@@ -490,6 +448,89 @@ public class AntWorld implements ActionListener
     }
   }
 
+
+
+
+  /**
+   * This is a tool used to smooth the world map before being used in the simulation.
+   * This method will never be called during a game.
+   * @param map
+   */
+  private void smoothMap(BufferedImage map)
+  {
+    int[] DX={0,-1,0,1};
+    int[] DY={-1,0,1,0};
+
+    int n = worldWidth*worldHeight*22;
+    for (int i = 0; i < n; i++)
+    {
+      int x = Constants.random.nextInt(worldWidth-3)+1;
+      int y = Constants.random.nextInt(worldHeight-3)+1;
+
+      int rgb0 = (map.getRGB(x, y) & 0x00FFFFFF);
+      if (rgb0 == LandType.WATER.getMapColor()) continue;
+
+      int r = (rgb0 & 0x00FF0000) >> 16;
+      int g = (rgb0 & 0x0000FF00) >> 8;
+      int b = rgb0 & 0x000000FF;
+
+      int dist = 1;
+      if (i < 10)
+      { dist = Constants.random.nextInt(12)+Constants.random.nextInt(12)+1;
+      }
+
+      int count = 1;
+      for (int k=0; k<DX.length; k++)
+      {
+        int xx = x+DX[k]*dist;
+        int yy = y+DY[k]*dist;
+
+        if (xx < 1) xx = 1;
+        if (yy < 1) yy = 1;
+        if (xx > worldWidth-3)  xx = worldWidth-3;
+        if (yy > worldHeight-3) yy = worldHeight-3;
+
+        int rgb = (map.getRGB(xx, yy) & 0x00FFFFFF);
+        if (rgb == LandType.WATER.getMapColor()) rgb = rgb0;
+
+        count++;
+        r += (rgb & 0x00FF0000) >> 16;
+        g += (rgb & 0x0000FF00) >> 8;
+        b += rgb & 0x000000FF;
+
+      }
+      r /= count;
+      g /= count;
+      b /= count;
+      rgb0 = (r<<16) | (g<<8) | b;
+      map.setRGB(x, y, rgb0);
+
+    }
+
+    JFileChooser fileChooser = new JFileChooser();
+
+    int returnValue = fileChooser.showSaveDialog(null);
+
+    if (returnValue != JFileChooser.APPROVE_OPTION) return;
+
+    File inputFile = fileChooser.getSelectedFile();
+    String path = inputFile.getAbsolutePath();
+    if ((path.endsWith(".png") == false) && (path.endsWith(".PNG") == false))
+    { path = path+".png";
+    }
+
+    File myFile = new File(path);
+    try
+    { ImageIO.write(map, "png", myFile);
+    }
+    catch (Exception e){ e.printStackTrace();}
+  }
+
+
+  /**
+   * Main entry point of the AntWorld Server.
+   * @param args Specify to run with GUI (default) or headless (-nogui).
+   */
   public static void main(String[] args)
   {
     boolean showGUI = true;
@@ -502,5 +543,4 @@ public class AntWorld implements ActionListener
     }
     new AntWorld(showGUI);
   }
-
 }

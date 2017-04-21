@@ -11,7 +11,7 @@ import java.io.Serializable;
  *
  * The following update form the server will include each of the client's
  * ants with each ant's action types unchanged if that action was successful or
- * set to AntActionType.BUSY if the action failed. <br><br>
+ * set to AntActionType.NOOP if the action failed. <br><br>
  *
  * If an ant takes an action that requires more than one tick (such as movement),
  * the action executes on the tick that it is initiated. Then, on all remaining turns
@@ -37,7 +37,7 @@ public class AntAction implements Serializable
      * and AntType.getEncumbranceMultiplier() to determine the movement cost.<br>
      * Regardless of the ticks required, the move action takes place on the turn
      * the command is given. All additional turns required by the move action will
-     * be AntActionType.BUSY
+     * be AntActionType.BUSY or AntActionType.BUSY_ATTACKED.
      */
     MOVE,
 
@@ -89,18 +89,19 @@ public class AntAction implements Serializable
 
     /**
      * If the ant is above ground, then this action requires setting
-     * the field: <tt>direction</tt>.<br>
+     * the field: <tt>direction</tt>. A direction == null is a self heal.<br>
      * If the ant is underground it can only heal itself and <tt>direction</tt>
      * is ignored.<br><br>
      *
      *
      */
-    HEAL,       // HEAL direction (must be medic ant) | HEAL (must be underground)
+    HEAL,
     ENTER_NEST, // ENTER_NEST (must be on home nest area)
     EXIT_NEST,  // EXIT_NEST x y (must be underground and x,y must be in home nest area)
     BIRTH,      // Client adds new ant to antlist, sets ant type. Server deducts needed food from nest store.
     DIED,       //
     BUSY,        //
+    BUSY_ATTACKED,
     NOOP      // STASIS
   }; 
 
