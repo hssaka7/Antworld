@@ -430,8 +430,6 @@ public class AntWorld implements ActionListener
         }
         else
         {
-          System.out.println("obj.objType="+obj.objType);
-          System.out.println(obj);
           foodList.add((FoodData) obj);
         }
       }
