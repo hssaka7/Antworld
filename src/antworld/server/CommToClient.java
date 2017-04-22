@@ -211,6 +211,7 @@ public class CommToClient extends Thread
       {
         System.out.println(myNest);
 
+        clientError = true;
         closeSocket("NOT CONNECTED");
         return;
       }
