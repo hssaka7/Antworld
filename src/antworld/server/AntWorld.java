@@ -454,6 +454,35 @@ public class AntWorld implements ActionListener
 
   private void createFoodSpawnSite(boolean spawnNearNests)
   {
+    if (spawnNearNests)
+    {
+      for (Nest nest : nestList)
+      {
+        int x0 = nest.centerX + 25;
+        int y0 = nest.centerY + 25;
+
+        int x1 = nest.centerX - 25;
+        int y1 = nest.centerY - 25;
+
+        if (world[x0][y0].getLandType() == LandType.GRASS)
+        {
+          foodSpawnList.add(new FoodSpawnSite(x0, y0, nestList.size()));
+          System.out.println("FoodSpawnSite: [ " + x0 + ", " + y0 + "]");
+
+        }
+        if (world[x1][y1].getLandType() == LandType.GRASS)
+        {
+          foodSpawnList.add(new FoodSpawnSite(x1, y1, nestList.size()));
+          System.out.println("FoodSpawnSite: [ " + x1 + ", " + y1 + "]");
+        }
+      }
+      return;
+    }
+
+
+
+
+
     int totalSitesToSpawn = 3 + random.nextInt(4);
     if (spawnNearNests) totalSitesToSpawn = 30;
 
