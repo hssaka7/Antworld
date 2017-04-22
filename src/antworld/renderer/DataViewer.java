@@ -140,11 +140,7 @@ public class DataViewer extends JFrame
       table_nestList.setValueAt(nest.nestName, row, 0);
       table_nestList.setValueAt(nest.team, row, 1);
 
-      String status = "OK";
-      if (nest.getStatus() == NestStatus.DISCONNECTED) status = "???";
-      else if (nest.getStatus() == NestStatus.UNDERGROUND) status = "---";
-
-      table_nestList.setValueAt(status, row, 2);
+      table_nestList.setValueAt(nest.getStatus().getAsFriendlyString(), row, 2);
       table_nestList.setValueAt(nest.getAntCount(), row, 3);
       table_nestList.setValueAt(nest.getFoodCount(), row, 4);
       table_nestList.setValueAt(nest.getWaterCount(), row, 5);
