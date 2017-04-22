@@ -70,7 +70,6 @@ public class Nest extends NestData implements Serializable
       if (ant.id != AntData.UNKNOWN_ANT_ID) continue;
       if (ant.action.type != AntActionType.BIRTH) continue;
       if (ant.antType == null) continue;
-      spawnAnt(ant.antType);
     }
 
     this.client = client;

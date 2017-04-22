@@ -240,11 +240,10 @@ public class CommToClient extends Thread
     if (myNest != null) myNest.disconnectClient();
     else return;
     myNest = null;
-    sendData.errorMsg = msg + "\n Disconnecting in 5 seconds.";
+    sendData.errorMsg = msg + "\n Disconnecting.";
     System.err.println(msg);
-    System.err.print("Disconnecting in 5 seconds.");
     try
-    { Thread.sleep(5000);
+    {
       if (clientReader != null) clientReader.close();
       if (clientWriter != null) clientWriter.close();
       if (client != null) client.close();
