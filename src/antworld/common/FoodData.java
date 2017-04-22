@@ -54,6 +54,6 @@ public class FoodData extends GameObject
 
   public String toString()
   {
-    return objType + ":"+quantity;
+    return objType + "("+gridX+","+gridY+") :"+quantity;
   }
 }

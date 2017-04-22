@@ -361,6 +361,8 @@ public class Nest extends NestData implements Serializable
 
     }
 
+    if (packetOut.enemyAntList.isEmpty())  packetOut.enemyAntList = null;
+    if (packetOut.foodList.isEmpty())  packetOut.foodList = null;
     client.pushPacketOut(packetOut, world.getGameTick());
   }
 }

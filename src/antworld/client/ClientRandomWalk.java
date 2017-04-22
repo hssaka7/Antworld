@@ -130,7 +130,7 @@ public class ClientRandomWalk
     else
     {
       //Spawn ants of whatever objType you want
-      int numAnts = 3;//Constants.INITIAL_FOOD_UNITS / AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
+      int numAnts = 30;//Constants.INITIAL_FOOD_UNITS / AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
       for (int i=0; i<numAnts; i++)
       {
         AntType type = AntType.values()[random.nextInt(AntType.SIZE)];
