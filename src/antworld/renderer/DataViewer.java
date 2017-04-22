@@ -99,9 +99,9 @@ public class DataViewer extends JFrame
 //    columnAntList[3] = "Center Y";
 //    columnAntList[4] = "Ant Count";
 //    int i = 5;
-//    for (FoodType type : FoodType.values())
-//    { if (type != FoodType.UNKNOWN)
-//      { columnNames[i] = type.name();
+//    for (FoodType objType : FoodType.values())
+//    { if (objType != FoodType.UNKNOWN)
+//      { columnNames[i] = objType.name();
 //        i++;
 //      }
 //    }

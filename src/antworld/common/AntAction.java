@@ -7,7 +7,7 @@ import java.io.Serializable;
  *
  * The client tells the server what its ants request to do in the next tick
  * by setting each ant's action to an AntActionType and by setting
- * the parameters required by that action type.<br><br>
+ * the parameters required by that action objType.<br><br>
  *
  * The following update form the server will include each of the client's
  * ants with each ant's action types unchanged if that action was successful or
@@ -120,7 +120,7 @@ public class AntAction implements Serializable
      * The client must use the client constructor that sets the ant's id to AntData.UNKNOWN_ANT_ID.<br>
      * For this action to be successful, the client's nest must have sufficient food in its nest
      * (see AntType.TOTAL_FOOD_UNITS_TO_SPAWN). <br>
-     * The client constructor allows the client to specify any ant type.
+     * The client constructor allows the client to specify any ant objType.
      */
     BIRTH,
 
@@ -249,7 +249,7 @@ public class AntAction implements Serializable
   
   
   /** Used for debugging, this method returns a formatted string of this action
-   * and the field values required by the value of type.
+   * and the field values required by the value of objType.
    */
   public String toString()
   {

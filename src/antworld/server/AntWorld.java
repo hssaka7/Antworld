@@ -262,7 +262,7 @@ public class AntWorld implements ActionListener
    *
    *     <li>The map must have at least one pixel of LandType.to define the nest.</li>
    *     <li>Each nest (pixel with 0x0 color) must be at least 2xNEST_RADIUS distant from each other nest.</li>
-   *     <li>Map images must be resized using nearest neighbor NOT any type of interpolation or
+   *     <li>Map images must be resized using nearest neighbor NOT any objType of interpolation or
    *            averaging which will create shades that are undefined.</li>
    *     <li>Map images must be saved in a lossless format (i.e. png).</li>
    * </ol>
@@ -422,7 +422,7 @@ public class AntWorld implements ActionListener
         world[x][y].lookedAtNest = myAnt.nestName;
         world[x][y].lookedAtTick = gameTick;
 
-        if (obj.type == GameObject.GameObjectType.ANT)
+        if (obj.objType == GameObject.GameObjectType.ANT)
         {
           AntData ant = (AntData) obj;
           if (ant.nestName == myAnt.nestName) continue;
@@ -430,6 +430,8 @@ public class AntWorld implements ActionListener
         }
         else
         {
+          System.out.println("obj.objType="+obj.objType);
+          System.out.println(obj);
           foodList.add((FoodData) obj);
         }
       }

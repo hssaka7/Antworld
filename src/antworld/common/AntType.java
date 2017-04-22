@@ -3,7 +3,7 @@ package antworld.common;
 import antworld.common.AntAction.AntState;
 /**
  * This game supports 3 types of ants: WORKER, EXPLORER and WARRIOR.
- * Each type of ant overrides different default capability values. For example,
+ * Each objType of ant overrides different default capability values. For example,
  * WORKER ants can carry more food or water units than other ants.
  */
 public enum AntType

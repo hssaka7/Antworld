@@ -129,7 +129,7 @@ public class ClientRandomWalk
     if (reconnect) packetOut.myAntList = null;
     else
     {
-      //Spawn ants of whatever type you want
+      //Spawn ants of whatever objType you want
       int numAnts = 3;//Constants.INITIAL_FOOD_UNITS / AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
       for (int i=0; i<numAnts; i++)
       {

@@ -132,7 +132,7 @@ public class Nest extends NestData implements Serializable
 
   /**
    * Adds (or subtracts if quantity is <0) the specified quantity of the
-   * specified type to this nest.
+   * specified objType to this nest.
    * @param type (must be FOOD or WATER, not ANT)
    * @param quantity (units to add or subtract if <0)
    */
@@ -325,7 +325,7 @@ public class Nest extends NestData implements Serializable
         if (DEBUG) System.out.println("Nest[" + nestName +
           "] Ant died: Current Population = " + antCollection.size());
         //Note: an ant may have done some action this tick before dieing.
-        //   This will have been recorded in ant.action.type.
+        //   This will have been recorded in ant.action.objType.
       }
     }
   }

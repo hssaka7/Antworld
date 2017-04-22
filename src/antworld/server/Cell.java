@@ -43,14 +43,14 @@ public class Cell
   public FoodData getFoodOrWater()
   {
     if (gameObject == null) return null;
-    if (gameObject.type == GameObjectType.ANT) return null;
+    if (gameObject.objType == GameObjectType.ANT) return null;
     return (FoodData) gameObject;
   }
 
   public AntData getAnt()
   {
     if (gameObject == null) return null;
-    if (gameObject.type != GameObjectType.ANT) return null;
+    if (gameObject.objType != GameObjectType.ANT) return null;
     return (AntData) gameObject;
   }
   
