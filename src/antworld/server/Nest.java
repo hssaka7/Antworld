@@ -84,11 +84,6 @@ public class Nest extends NestData implements Serializable
    */
   public synchronized void disconnectClient()
   {
-    if (client != null)
-    {
-      client.closeSocket("Server disconnecting");
-      client = null;
-    }
     //Do not change if status is EMPTY or UNDERGROUND
     if (status == NestStatus.CONNECTED) status = NestStatus.DISCONNECTED;
   }
