@@ -8,9 +8,8 @@ import antworld.common.AntAction.AntState;
  * client and server.
  */
 
-public class AntData extends GameObject implements Comparable<AntData>, Serializable
+public class AntData extends GameObject implements Comparable<AntData>
 {
-
   /** An ant can be in one of three states: UNDERGROUND, OUT_AND_ABOUT or DEAD.<br>
    * When an ant is UNDERGROUND, it is in its nest. An ant in the nest is totally safe:
    * it cannot be attacked and never takes attrition damage.

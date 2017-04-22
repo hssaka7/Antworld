@@ -340,17 +340,17 @@ public class Nest extends NestData implements Serializable
 
     packetOut.tick = world.getGameTick();
     packetOut.tickTime = world.getGameTime();
-    //commData.enemyAntList = new ArrayList<>();
-    packetOut.foodList = new ArrayList();
+    packetOut.enemyAntList = new ArrayList<>();
+    packetOut.foodList = new ArrayList<>();
 
 
     for (AntData ant : antCollection.values())
     {
+      world.appendVisibleObjects(ant, packetOut.enemyAntList, packetOut.foodList);
+
       if (ant.action.type == AntActionType.BUSY) continue;
       packetOut.myAntList.add(ant);
 
-      //world.appendAntsInProximity(ant, commData.enemyAntList);
-      world.appendFoodInProximity(ant, packetOut.foodList);
     }
 
     client.pushPacketOut(packetOut, world.getGameTick());

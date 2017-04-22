@@ -11,7 +11,10 @@ public class Cell
 {
   private final int height;
   private final int x, y;
-  //private
+  public int lookedAtTick = 0;
+  public NestNameEnum lookedAtNest = null;
+
+
   
   private LandType landType;
   private Nest nest = null;

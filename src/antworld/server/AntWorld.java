@@ -76,7 +76,7 @@ public class AntWorld implements ActionListener
 
 
     foodSpawnList = new ArrayList<>();
-    createFoodSpawnSite();
+    createFoodSpawnSite(true);
       //System.out.println("AntWorld.loadFoodSites()...."
       //  + foodSpawnList.size());
 
@@ -402,7 +402,7 @@ public class AntWorld implements ActionListener
   // return false;
   // }
 
-  public void appendFoodInProximity(AntData myAnt, ArrayList<FoodData> foodList)
+  public void appendVisibleObjects(AntData myAnt, ArrayList<AntData> antList, ArrayList<FoodData> foodList)
   {
     int radius = myAnt.antType.getVisionRadius();
     int xmin = Math.max(1,myAnt.gridX - radius);
@@ -415,7 +415,23 @@ public class AntWorld implements ActionListener
     {
       for (int x=xmin; x <= xmax; x++)
       {
+        GameObject obj = world[x][y].getGameObject();
+        if (obj == null) continue;
+        if ((world[x][y].lookedAtNest == myAnt.nestName) && (world[x][y].lookedAtTick == gameTick)) continue;
 
+        world[x][y].lookedAtNest = myAnt.nestName;
+        world[x][y].lookedAtTick = gameTick;
+
+        if (obj.type == GameObject.GameObjectType.ANT)
+        {
+          AntData ant = (AntData) obj;
+          if (ant.nestName == myAnt.nestName) continue;
+          antList.add(ant);
+        }
+        else
+        {
+          foodList.add((FoodData) obj);
+        }
       }
     }
   }
@@ -436,9 +452,11 @@ public class AntWorld implements ActionListener
     return nestDataList;
   }
 
-  private void createFoodSpawnSite()
+  private void createFoodSpawnSite(boolean spawnNearNests)
   {
     int totalSitesToSpawn = 3 + random.nextInt(4);
+    if (spawnNearNests) totalSitesToSpawn = 30;
+
     //int xRange = worldWidth/totalSitesToSpawn;
     int minDistanceToNest = 150;
     int minDistanceToSpawnSite = 500;

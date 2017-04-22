@@ -6,7 +6,9 @@ import antworld.common.NestNameEnum;
 import antworld.server.AntWorld;
 import antworld.server.FoodSpawnSite;
 
-public abstract class GameObject
+import java.io.Serializable;
+
+public abstract class GameObject implements Serializable
 {
   public enum GameObjectType {ANT, FOOD, WATER};
   

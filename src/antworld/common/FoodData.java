@@ -9,7 +9,7 @@ import java.io.Serializable;
  * server tells the client.
  * 
  */
-public class FoodData extends GameObject implements Serializable
+public class FoodData extends GameObject
 {
   
   /** The Constant serialVersionUID. */
