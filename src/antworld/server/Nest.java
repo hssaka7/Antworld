@@ -256,6 +256,8 @@ public class Nest extends NestData implements Serializable
    */
   public void updateReceivePacket(AntWorld world)
   {
+    if (DEBUG) System.out.println("Nest["+nestName+"].updateReceivePacket()");
+
     PacketToServer packetIn = client.popPacketIn(world.getGameTick());
 
     if (packetIn == null) return;
