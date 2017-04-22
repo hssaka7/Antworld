@@ -18,6 +18,7 @@ import antworld.common.Constants;
 import antworld.common.FoodData;
 import antworld.common.NestData;
 import antworld.common.NestNameEnum;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import static antworld.common.AntData.UNKNOWN_ANT_ID;
 
@@ -36,7 +37,14 @@ public class Nest extends NestData implements Serializable
   private static final boolean DEBUG = false;
   private static Random random = Constants.random;
 
-  public enum NestStatus {EMPTY, CONNECTED, DISCONNECTED, UNDERGROUND};
+  public enum NestStatus {
+    EMPTY, CONNECTED, DISCONNECTED, UNDERGROUND;
+
+    public String getAsFriendlyString()
+    {
+      return toString().substring(0,1).toUpperCase() + toString().substring(1).toLowerCase();
+    }
+  }
 
   private NestStatus status = NestStatus.EMPTY;
   private CommToClient client = null;
