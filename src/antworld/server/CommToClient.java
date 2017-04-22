@@ -16,7 +16,8 @@ public class CommToClient extends Thread
   private static final boolean DEBUG = true;
   private Server server = null;
   private Socket client = null;
-  
+  private boolean clientError = false;
+
   private ObjectInputStream clientReader = null;
   private ObjectOutputStream clientWriter = null;
   private Nest myNest = null;
@@ -27,10 +28,6 @@ public class CommToClient extends Thread
   private volatile int currentPacketOutTick;
   private String errorMsg;
 
-  
-
- 
-  
   public CommToClient(Server server, Socket client)
   {
     this.server = server;
@@ -86,6 +83,7 @@ public class CommToClient extends Thread
 
   public synchronized void pushPacketIn(PacketToServer packetIn)
   {
+    if (packetIn == null) return;
     currentPacketIn = packetIn;
     timeOfLastMessageFromClient = server.getContinuousTime();
     packetIn.timeReceived = timeOfLastMessageFromClient;
@@ -179,6 +177,7 @@ public class CommToClient extends Thread
     }
     catch (IOException e)
     {
+      clientError = true;
       closeSocket("CommToClient***ERROR***: client has disconnected");
       return null;
     }
@@ -205,12 +204,14 @@ public class CommToClient extends Thread
   
   private void send(PacketToClient data)
   {
+    if (clientError) return;
     try
     {
       if (myNest.getStatus() != NestStatus.CONNECTED)
       {
         System.out.println(myNest);
 
+        clientError = true;
         closeSocket("NOT CONNECTED");
         return;
       }
@@ -220,25 +221,28 @@ public class CommToClient extends Thread
       clientWriter.flush();
       clientWriter.reset();
     }
-    catch (Exception e) 
+    catch (Exception e)
     {
-      closeSocket("CommToClient.send()" + e.getMessage());
+      clientError = true;
+      closeSocket("CommToClient.send() " + e.getMessage());
     }
     
   }
-  
-  
   
   public void closeSocket(String msg)
   {
     NestNameEnum nestName = null;
     if (myNest != null) nestName = myNest.nestName;
     PacketToClient sendData = new PacketToClient(nestName);
-    sendData.errorMsg = msg + "\n Disconnecting in 5 seconds.";
     System.err.println(sendData.errorMsg);
 
-    send(sendData);
+    if (!clientError) send(sendData);
     if (myNest != null) myNest.disconnectClient();
+    else return;
+    myNest = null;
+    sendData.errorMsg = msg + "\n Disconnecting in 5 seconds.";
+    System.err.println(msg);
+    System.err.print("Disconnecting in 5 seconds.");
     try
     { Thread.sleep(5000);
       if (clientReader != null) clientReader.close();
