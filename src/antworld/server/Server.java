@@ -146,6 +146,7 @@ public class Server extends Thread
         return null;
       }
       System.out.println("Server() Reconnecting " + packetIn.myTeam + " to nest " + assignedNest.nestName);
+      assignedNest.setClient(client, packetIn);
       return assignedNest;
     }
 
