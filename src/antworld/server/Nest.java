@@ -166,12 +166,12 @@ public class Nest extends NestData implements Serializable
   private AntData spawnAnt(AntType antType)
   {
     //System.out.println("Nest.spawnAnt(): " + this);
-    if (foodInNest < antType.TOTAL_FOOD_UNITS_TO_SPAWN)
+    if (foodInNest < AntType.TOTAL_FOOD_UNITS_TO_SPAWN)
     {
       return null;
     }
 
-    foodInNest -= antType.TOTAL_FOOD_UNITS_TO_SPAWN;
+    foodInNest -= AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
     AntData ant = AntMethods.createAnt(antType, nestName, team);
     //System.out.println(ant);
 
