@@ -14,7 +14,6 @@ import javax.imageio.ImageIO;
 import antworld.common.AntAction;
 import antworld.common.AntData;
 import antworld.common.Constants;
-import antworld.common.Direction;
 import antworld.common.FoodData;
 import antworld.common.GameObject;
 import antworld.common.LandType;
@@ -76,8 +75,8 @@ public class AntWorld implements ActionListener
     readAntWorld(map);
 
 
-      foodSpawnList = new ArrayList<>();
-      createFoodSpawnSite();
+    foodSpawnList = new ArrayList<>();
+    createFoodSpawnSite();
       //System.out.println("AntWorld.loadFoodSites()...."
       //  + foodSpawnList.size());
 
@@ -88,7 +87,7 @@ public class AntWorld implements ActionListener
       int x0 = nest.centerX;
       int y0 = nest.centerY;
 
-      System.out.println(nest.nestName + ": " + x0+","+y0);
+      //if (DEBUG) System.out.println(nest.nestName + ": " + x0+","+y0);
 
       for (int x = x0 - Constants.NEST_RADIUS; x <= x0
         + Constants.NEST_RADIUS; x++)
@@ -431,19 +430,51 @@ public class AntWorld implements ActionListener
 
   private void createFoodSpawnSite()
   {
-    int totalSitesToSpawn = 3 + random.nextInt(3);
-    int xRange = worldWidth/totalSitesToSpawn;
+    int totalSitesToSpawn = 3 + random.nextInt(4);
+    //int xRange = worldWidth/totalSitesToSpawn;
+    int minDistanceToNest = 150;
+    int minDistanceToSpawnSite = 500;
+    int attemptCount = 0;
     while (totalSitesToSpawn > 0)
     {
-      int spawnX = random.nextInt(xRange);
-      spawnX = spawnX + (totalSitesToSpawn-1)*xRange;
-      int spawnY = random.nextInt(worldHeight);
+      attemptCount++;
+      int spawnX = random.nextInt(worldWidth-4)+2;
+      int spawnY = random.nextInt(worldHeight-4)+2;
 
-      if (world[spawnX][spawnY].getLandType() == LandType.GRASS)
+      if (world[spawnX][spawnY].getLandType() != LandType.GRASS) continue;
       {
-        foodSpawnList.add(new FoodSpawnSite(spawnX, spawnY, nestList.size()));
-        //System.out.println("FoodSpawnSite: [ " + spawnX + ", " + spawnY + "] " + foodType);
-        totalSitesToSpawn--;
+        boolean locationOK = true;
+        for (Nest nest : nestList)
+        {
+          int x0 = nest.centerX;
+          int y0 = nest.centerY;
+          if ((Math.abs(x0-spawnX) < minDistanceToNest) && (Math.abs(y0-spawnY) < minDistanceToNest))
+          {
+            locationOK = false;
+            break;
+          }
+        }
+        if (!locationOK) continue;
+
+        for (FoodSpawnSite existingSite : foodSpawnList)
+        {
+          int x0 = existingSite.getLocationX();
+          int y0 = existingSite.getLocationY();
+          if ((Math.abs(x0-spawnX) < minDistanceToSpawnSite) && (Math.abs(y0-spawnY) < minDistanceToSpawnSite))
+          {
+            locationOK = false;
+            break;
+          }
+        }
+
+
+
+        if (locationOK)
+        { foodSpawnList.add(new FoodSpawnSite(spawnX, spawnY, nestList.size()));
+          System.out.println("FoodSpawnSite: [ " + spawnX + ", " + spawnY + "] attempts="+attemptCount);
+          attemptCount = 0;
+          totalSitesToSpawn--;
+        }
       }
     }
   }

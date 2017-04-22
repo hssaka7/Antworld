@@ -233,6 +233,7 @@ public class Nest extends NestData implements Serializable
         continue;
       }
 
+      if (ant.action.type == AntActionType.BUSY_ATTACKED) ant.action.type = AntActionType.BUSY;
       if (ant.action.type == AntActionType.MOVE || ant.action.type == AntActionType.BUSY)
       {
         if (ant.action.quantity > 0) ant.action.quantity--;
