@@ -8,12 +8,11 @@ import java.net.Socket;
 import antworld.common.NestNameEnum;
 import antworld.common.PacketToServer;
 import antworld.common.PacketToClient;
-import antworld.common.TeamNameEnum;
 import antworld.server.Nest.NestStatus;
 
 public class CommToClient extends Thread
 {
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   private Server server = null;
   private Socket client = null;
   private boolean clientError = false;
@@ -45,7 +44,6 @@ public class CommToClient extends Thread
         " ***ERROR***: Could not open I/O streams");
     }
   }
-
 
   public void run()
   {
@@ -108,7 +106,7 @@ public class CommToClient extends Thread
 
   public synchronized void pushPacketOut(PacketToClient packetOut, int gameTick)
   {
-    System.out.println("CommToClient.pushPacketOut(gameTick="+gameTick+") " +
+    if (DEBUG)System.out.println("CommToClient.pushPacketOut(gameTick="+gameTick+") " +
       currentPacketOutTick + " " + currentPacketInTick);
     currentPacketOutTick = gameTick;
     currentPacketOut = packetOut;

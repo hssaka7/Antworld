@@ -105,30 +105,9 @@ public class Server extends Thread
   }
 
 
-  /*
-  public int getNestIdxOfTeam(TeamNameEnum team)
-  {
-    if (team == null) return Nest.INVALID_NEST_ID;
-
-    for (int i=0; i < nestList.size(); i++)
-    {
-      Nest myNest = nestList.get(i);
-      if (myNest.team == team) return i;
-    }
-
-   return Nest.INVALID_NEST_ID;
-  }
-  */
 
   public double getGameTime() {return world.getGameTime();}
   public int getGameTick() {return world.getGameTick();}
-  
-  public Nest getNest(NestNameEnum nestName)
-  {
-    int nestIdx = nestName.ordinal();
-   
-    return nestList.get(nestIdx);
-  }
 
   
   public synchronized Nest assignNest(CommToClient client, PacketToServer packetIn)
@@ -175,44 +154,4 @@ public class Server extends Thread
 
     return assignedNest;
   }
-  
-
-  /*
-  public void closeClient(NestNameEnum nestName)
-  {
-    int nestIdx = nestName.ordinal();
-    Nest nest = nestList.get(nestIdx);
-    if (nest.getNetworkStatus() == NetworkStatus.CONNECTED)
-    { nest.setNetworkStatus(NetworkStatus.DISCONNECTED);
-    }
-    if (clientConnectionList[nestIdx] != null) 
-    { 
-      try { clientConnectionList[nestIdx].closeSocket("Server.closeClient("+nestName+"): Disconnect"); } 
-      catch (Exception e) { }
-      clientConnectionList[nestIdx] = null;
-    }
-  }
-  */
-
-  /*
-  private void closeClient(ServerToClientConnection myClientListener)
-  {
-    if (myClientListener != null)
-    { 
-      NestNameEnum nestName = myClientListener.getNestName();
-      if (nestName != null)
-      { 
-    	    int nestIdx = nestName.ordinal();
-    	    Nest nest = nestList.get(nestIdx);
-    	    if (nest.getNetworkStatus() == NetworkStatus.CONNECTED)
-    	    { nest.setNetworkStatus(NetworkStatus.DISCONNECTED);
-    	    }  
-    	  
-        clientConnectionList[nestName.ordinal()] = null;
-      }
-      
-      try { myClientListener.closeSocket("Server.closeClient() Disconnect"); } catch (Exception e) { }
-    }
-  }
-  */
 }

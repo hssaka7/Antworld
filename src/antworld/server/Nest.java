@@ -1,6 +1,7 @@
 package antworld.server;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -340,7 +341,7 @@ public class Nest extends NestData implements Serializable
     packetOut.tick = world.getGameTick();
     packetOut.tickTime = world.getGameTime();
     //commData.enemyAntList = new ArrayList<>();
-    //commData.foodSet = new ArrayList();
+    packetOut.foodList = new ArrayList();
 
 
     for (AntData ant : antCollection.values())
@@ -348,9 +349,8 @@ public class Nest extends NestData implements Serializable
       if (ant.action.type == AntActionType.BUSY) continue;
       packetOut.myAntList.add(ant);
 
-      //TODO
       //world.appendAntsInProximity(ant, commData.enemyAntList);
-      //world.appendFoodInProximity(ant, commData.foodSet);
+      world.appendFoodInProximity(ant, packetOut.foodList);
     }
 
     client.pushPacketOut(packetOut, world.getGameTick());

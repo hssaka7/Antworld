@@ -27,7 +27,7 @@ import antworld.renderer.Renderer;
 
 public class AntWorld implements ActionListener
 {
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   public static Random random = Constants.random;
   public static final int FRAME_WIDTH = 1200;
   public static final int FRAME_HEIGHT = 700;
@@ -401,17 +401,25 @@ public class AntWorld implements ActionListener
   // }
   // return false;
   // }
-/*
-  public void appendFoodInProximity(AntData myAnt, HashSet<FoodData> foodSet)
+
+  public void appendFoodInProximity(AntData myAnt, ArrayList<FoodData> foodList)
   {
-    double x = myAnt.gridX;
-    double y = myAnt.gridY;
-    double radius = myAnt.antType.getVisionRadius();
+    int radius = myAnt.antType.getVisionRadius();
+    int xmin = Math.max(1,myAnt.gridX - radius);
+    int ymin = Math.max(1,myAnt.gridY - radius);
+    int xmax = Math.min(worldWidth-2,myAnt.gridX + radius);
+    int ymax = Math.min(worldHeight-2, myAnt.gridY + radius);
 
 
+    for (int y=ymin; y <= ymax; y++)
+    {
+      for (int x=xmin; x <= xmax; x++)
+      {
+
+      }
     }
   }
-*/
+
 
 
 

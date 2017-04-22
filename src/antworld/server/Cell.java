@@ -11,6 +11,7 @@ public class Cell
 {
   private final int height;
   private final int x, y;
+  //private
   
   private LandType landType;
   private Nest nest = null;
