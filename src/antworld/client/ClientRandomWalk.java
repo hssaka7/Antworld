@@ -393,9 +393,6 @@ public class ClientRandomWalk
     if (args.length > 1)
     { team = TeamNameEnum.getTeamByString(args[0]);
     }
-    if (args.length > 1)
-    { team = TeamNameEnum.getTeamByString(args[0]);
-    }
 
     new ClientRandomWalk(serverHost, team, reconnection);
   }
