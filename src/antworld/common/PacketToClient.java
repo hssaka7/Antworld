@@ -113,9 +113,9 @@ public class PacketToClient implements Serializable
 
   public String toString()
   {
-    String out = "CommData["+serialVersionUID+":"+tick+":]: "+ myNest + "\n     ";
+    String out = "PacketToClient["+serialVersionUID+":"+tick+":]: "+ myNest + "\n     ";
     if (errorMsg != null)
-    { out = out + "**ERROR**: " + errorMsg + "\n     ";
+    { out = out + "**ERROR**: " + errorMsg + "\n  ";
     }
     
     out = out+ "myAntList:";
@@ -123,9 +123,15 @@ public class PacketToClient implements Serializable
     { out = out + "\n     " + ant;
     }
     if (enemyAntList != null)
-    {  out = out + "\n     enemyAntSet:";
+    {  out = out + "\n  enemyAntSet:";
       for (AntData ant : enemyAntList)
       { out = out + "\n     " + ant;
+      }
+    }
+    if (foodList != null)
+    { out = out + "\n  enemyAntSet:";
+      for (FoodData food : foodList)
+      { out = out + "\n     " + food;
       }
     }
     return out;
