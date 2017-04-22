@@ -35,8 +35,8 @@ public class Util
     { // System.out.println("imagePath="+imagePath);
 
       imagePath = "resources/" + imagePath;
-      fileURL = new URL("file:" + imagePath);
-
+      fileURL = Util.class.getClassLoader().getResource(imagePath);
+      if (fileURL == null) throw new java.io.FileNotFoundException("Could not find file " + imagePath);
       loadedImage = ImageIO.read(fileURL);
 
       // Register it with media tracker
