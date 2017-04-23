@@ -3,10 +3,7 @@ package antworld.server;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Random;
-
 import antworld.common.Constants;
-import antworld.common.NestNameEnum;
 import antworld.common.PacketToServer;
 import antworld.server.Nest.NestStatus;
 

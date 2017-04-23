@@ -22,7 +22,7 @@ import java.io.Serializable;
 public class AntAction implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
-  public enum AntState {UNDERGROUND, OUT_AND_ABOUT, DEAD};
+  public enum AntState {UNDERGROUND, OUT_AND_ABOUT, DEAD}
 
   public enum AntActionType 
   {
@@ -155,7 +155,7 @@ public class AntAction implements Serializable
      * was specified.
      */
     NOOP
-  }; 
+  }
 
   public AntActionType type;
 

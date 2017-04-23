@@ -121,5 +121,5 @@ public enum AntType
    * Any water the ant was carrying is lost.
    * @return Units of food that an ant becomes when it dies.
    */
-  public static final int getDeadAntFoodUnits() {return 2;}
+  public static int getDeadAntFoodUnits() {return 2;}
 }

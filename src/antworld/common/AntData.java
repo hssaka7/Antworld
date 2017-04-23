@@ -68,7 +68,7 @@ public class AntData extends GameObject implements Comparable<AntData>
    * ant with id = UNKNOWN_ANT_ID.
    * This constructor sets nestName to null. The server will ignore this
    * as a client can only birth ants in its own nest.
-   * @param type the objType
+   * @param antType the objType
    * @param teamName the team name
    */
   public AntData(AntType antType, TeamNameEnum teamName)

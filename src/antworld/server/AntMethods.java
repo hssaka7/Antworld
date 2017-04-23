@@ -166,7 +166,7 @@ public class AntMethods
         int x = targetCell.getLocationX();
         int y = targetCell.getLocationY();
         FoodData droppedFood = new FoodData(ant.carryType, x, y, ant.carryUnits);
-        world.addFood(null, droppedFood);
+        world.addFood(droppedFood);
       }
 
       ant.carryUnits -= action.quantity;

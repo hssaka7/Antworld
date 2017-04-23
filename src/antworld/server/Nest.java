@@ -19,7 +19,6 @@ import antworld.common.Constants;
 import antworld.common.FoodData;
 import antworld.common.NestData;
 import antworld.common.NestNameEnum;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import static antworld.common.AntData.UNKNOWN_ANT_ID;
 
@@ -74,12 +73,6 @@ public class Nest extends NestData implements Serializable
       waterInNest = Constants.INITIAL_NEST_WATER_UNITS;
     }
 
-    for (AntData ant : packetIn.myAntList)
-    {
-      if (ant.id != AntData.UNKNOWN_ANT_ID) continue;
-      if (ant.action.type != AntActionType.BIRTH) continue;
-      if (ant.antType == null) continue;
-    }
 
     this.client = client;
     status = NestStatus.CONNECTED;
@@ -321,7 +314,7 @@ public class Nest extends NestData implements Serializable
         }
   
         FoodData droppedFood = new FoodData(GameObject.GameObjectType.FOOD, ant.gridX, ant.gridY, foodUnits);
-        world.addFood(null, droppedFood);
+        world.addFood(droppedFood);
         if (DEBUG) System.out.println("Nest[" + nestName +
           "] Ant died: Current Population = " + antCollection.size());
         //Note: an ant may have done some action this tick before dieing.
@@ -330,12 +323,6 @@ public class Nest extends NestData implements Serializable
     }
   }
 
-  //public AntData getAntByID(int antId)
-  //{
-  //  tmpAntData.id = antId;
-  //  int index = Collections.binarySearch(antList, tmpAntData);
-  //  return antList.get(index);
-  //}
 
   public void updateSendPacket(AntWorld world, NestData[] nestDataList)
   {

@@ -39,7 +39,7 @@ public class PacketToClient implements Serializable
    * only be included in <tt>myAntList</tt> if something about its state changed since
    * the last update when it was included.
    */
-  public volatile ArrayList<AntData> myAntList = new ArrayList<AntData>();
+  public volatile ArrayList<AntData> myAntList = new ArrayList<>();
 
 
   /**

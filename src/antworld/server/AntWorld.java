@@ -11,7 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JFileChooser;
 import javax.imageio.ImageIO;
 
-import antworld.common.AntAction;
+import antworld.common.AntAction.AntState;
 import antworld.common.AntData;
 import antworld.common.Constants;
 import antworld.common.FoodData;
@@ -75,11 +75,9 @@ public class AntWorld implements ActionListener
     readAntWorld(map);
 
 
+
     foodSpawnList = new ArrayList<>();
     createFoodSpawnSite(true);
-      //System.out.println("AntWorld.loadFoodSites()...."
-      //  + foodSpawnList.size());
-
     System.out.println("World: " + worldWidth + " x " + worldHeight);
 
     for (Nest nest : nestList)
@@ -87,7 +85,7 @@ public class AntWorld implements ActionListener
       int x0 = nest.centerX;
       int y0 = nest.centerY;
 
-      //if (DEBUG) System.out.println(nest.nestName + ": " + x0+","+y0);
+      if (DEBUG) System.out.println(nest.nestName + ": " + x0+","+y0);
 
       for (int x = x0 - Constants.NEST_RADIUS; x <= x0
         + Constants.NEST_RADIUS; x++)
@@ -103,20 +101,20 @@ public class AntWorld implements ActionListener
       }
     }
 
-
-    if (showGUI)
-    {
-      drawPanel.initWorld(world, worldWidth, worldHeight);
-      drawPanel.repaint();
-    }
-
     gameTimer = new Timer(Constants.TIME_STEP_MSEC, this);
 
     System.out.println("Done Initializing AntWorld");
     server = new Server(this, nestList);
     if (showGUI)
     {
+      drawPanel.initWorld(world, worldWidth, worldHeight);
+      drawPanel.repaint();
       dataViewer = new DataViewer(nestList);
+    }
+
+    for (FoodSpawnSite site : foodSpawnList)
+    {
+      site.spawn(this);
     }
     gameTimer.start();
     server.start();
@@ -135,7 +133,7 @@ public class AntWorld implements ActionListener
 
     if (DEBUG) System.out.println("AntWorld =====> Tick=" + gameTick + " (" + gameTime + ")");
 
-    if (random.nextDouble() < 0.01)
+    if (random.nextDouble() < 0.005)
     {
       int foodSiteIdx = random.nextInt(foodSpawnList.size());
       foodSpawnList.get(foodSiteIdx).spawn(this);
@@ -321,7 +319,7 @@ public class AntWorld implements ActionListener
 
   public void addAnt(AntData ant)
   {
-    if (ant.state != AntAction.AntState.OUT_AND_ABOUT) return;
+    if (ant.state != AntState.OUT_AND_ABOUT) return;
     int x = ant.gridX;
     int y = ant.gridY;
 
@@ -330,7 +328,7 @@ public class AntWorld implements ActionListener
     if (drawPanel != null) drawPanel.drawCell(world[x][y]);
   }
 
-  public void addFood(FoodSpawnSite foodSpawnSite, FoodData food)
+  public void addFood(FoodData food)
   {
     int x = food.gridX;
     int y = food.gridY;
@@ -434,13 +432,13 @@ public class AntWorld implements ActionListener
 
         if (world[x0][y0].getLandType() == LandType.GRASS)
         {
-          foodSpawnList.add(new FoodSpawnSite(x0, y0, nestList.size()));
+          foodSpawnList.add(new FoodSpawnSite(this, x0, y0));
           System.out.println("FoodSpawnSite: [ " + x0 + ", " + y0 + "]");
 
         }
         if (world[x1][y1].getLandType() == LandType.GRASS)
         {
-          foodSpawnList.add(new FoodSpawnSite(x1, y1, nestList.size()));
+          foodSpawnList.add(new FoodSpawnSite(this, x1, y1));
           System.out.println("FoodSpawnSite: [ " + x1 + ", " + y1 + "]");
         }
       }
@@ -493,7 +491,7 @@ public class AntWorld implements ActionListener
 
 
         if (locationOK)
-        { foodSpawnList.add(new FoodSpawnSite(spawnX, spawnY, nestList.size()));
+        { foodSpawnList.add(new FoodSpawnSite(this, spawnX, spawnY));
           System.out.println("FoodSpawnSite: [ " + spawnX + ", " + spawnY + "] attempts="+attemptCount);
           attemptCount = 0;
           totalSitesToSpawn--;

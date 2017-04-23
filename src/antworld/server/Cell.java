@@ -47,6 +47,13 @@ public class Cell
     return (FoodData) gameObject;
   }
 
+  public int getFoodUnits()
+  {
+    if (gameObject.objType != GameObjectType.FOOD) return 0;
+    FoodData food = (FoodData) gameObject;
+    return food.quantity;
+  }
+
   public AntData getAnt()
   {
     if (gameObject == null) return null;
@@ -71,10 +78,7 @@ public class Cell
   { this.nest = nest;
     this.landType = LandType.NEST;
   }
-  
-  public void setLandType(LandType landType)
-  { this.landType = landType;
-  }
+
   
   public int getRGB()
   { 
