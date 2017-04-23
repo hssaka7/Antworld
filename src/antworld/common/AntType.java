@@ -83,9 +83,7 @@ public enum AntType
   /**
    * Fog of War is a major mechanic of this game. <br>
    * Each tick, the server notifies the client of food and enemy ants that are within
-   * the vision radius of one or more of its ants.<br>
-   * An ant with a vision radius of 10 will perceive food and enemy ants within a
-   * 21x21 pixel square area that is centered on the ant.<br><br>
+   * the vision radius (defined by Manhattan Distance) of one or more of its ants.<br>
    *
    * If your nest has at least one ant underground, then you can perceive all game objects
    * (ants, food or water droplets) within your nest radius.

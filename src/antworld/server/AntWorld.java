@@ -367,40 +367,7 @@ public class AntWorld implements ActionListener
     }
 
   }
-/*
-  public void appendAntsInProximity(AntData myAnt, HashSet<AntData> antSet)
-  {
-    double x = myAnt.gridX;
-    double y = myAnt.gridY;
-    double radius = myAnt.antType.getVisionRadius();
-    NestNameEnum nestExclude = myAnt.nestName;
 
-      }
-    }
-  }
-*/
-  // public boolean isAntInProximity(double x, double y, double radius)
-  // {
-  // for (int i = (int) Math.max(Math.floor(x / BLOCK_SIZE - radius /
-  // BLOCK_SIZE), 0); i <= Math.min(
-  // Math.ceil(x / BLOCK_SIZE + radius / BLOCK_SIZE), antBlocks.length - 1);
-  // ++i)
-  // {
-  // for (int j = (int) Math.max(Math.floor(y / BLOCK_SIZE - radius /
-  // BLOCK_SIZE), 0); j <= Math.min(
-  // Math.ceil(y / BLOCK_SIZE + radius / BLOCK_SIZE), antBlocks[i].length -
-  // 1); ++j)
-  // {
-  // for (AntData ant : antBlocks[i][j])
-  // {
-  //
-  // if (Util.manhattanDistance((int) x, (int) y, ant.gridX, ant.gridY) <=
-  // radius) return true;
-  // }
-  // }
-  // }
-  // return false;
-  // }
 
   public void appendVisibleObjects(AntData myAnt, ArrayList<AntData> antList, ArrayList<FoodData> foodList)
   {
@@ -415,6 +382,7 @@ public class AntWorld implements ActionListener
     {
       for (int x=xmin; x <= xmax; x++)
       {
+        if (Util.manhattanDistance(x, y, myAnt.gridX, myAnt.gridY) > radius) continue;
         GameObject obj = world[x][y].getGameObject();
         if (obj == null) continue;
         if ((world[x][y].lookedAtNest == myAnt.nestName) && (world[x][y].lookedAtTick == gameTick)) continue;
