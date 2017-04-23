@@ -389,7 +389,8 @@ public class ClientRandomWalk
     boolean reconnection = false;
     if (args.length > 0) serverHost = args[args.length -1];
 
-    TeamNameEnum team = TeamNameEnum.RandomWalkers;
+    //TeamNameEnum team = TeamNameEnum.RandomWalkers;
+    TeamNameEnum team = TeamNameEnum.SimpleSolid_3;
     if (args.length > 1)
     { team = TeamNameEnum.getTeamByString(args[0]);
     }

@@ -3,14 +3,18 @@ package antworld.server;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Random;
 
 import antworld.common.Constants;
 import antworld.common.NestNameEnum;
 import antworld.common.PacketToServer;
 import antworld.server.Nest.NestStatus;
 
+import static antworld.common.Constants.random;
+
 public class Server extends Thread
 {
+  private static final boolean DEBUG = false;
 
   /**
    * If the server does not receive a PacketToServer from a particular client
@@ -59,11 +63,11 @@ public class Server extends Thread
     }
     catch (Exception e)
     {
-      //System.err.println("Server: ***ERROR***: Opening socket failed.");
-      //e.printStackTrace();
+      System.err.println("Server: ***ERROR***: Opening socket failed.");
+      e.printStackTrace();
       System.exit(-1);
     }
-    //System.out.println("Server: socket opened on port "+Constants.PORT);
+    if (DEBUG) System.out.println("Server: socket opened on port "+Constants.PORT);
   }
   
   
@@ -99,8 +103,6 @@ public class Server extends Thread
    */
   public double getContinuousTime()
   {
-    //System.out.println("Server.getContinuousTime(): timeStartOfGameNano = " + timeStartOfGameNano);
-    //System.out.println("                            System.nanoTime() = " + System.nanoTime());
     return (System.nanoTime() - timeStartOfGameNano)*Constants.NANO;
   }
 
@@ -129,28 +131,62 @@ public class Server extends Thread
       return assignedNest;
     }
 
-    int largestMinDistance = 0;
-    ArrayList<FoodSpawnSite> foodSpawnSites = world.getFoodSpawnList();
+    int assignedNestCount = 0;
+    int centerOfMassX = 0;
+    int centerOfMassY = 0;
     for (Nest nest : nestList)
     {
-      if (nest.team != null) continue;
-      int minDistance = Integer.MAX_VALUE;
-      for (FoodSpawnSite spawnSite : foodSpawnSites)
+      if (nest.team != null)
       {
-        int dx = nest.centerX - spawnSite.getLocationX();
-        int dy = nest.centerY - spawnSite.getLocationY();
-        int distance = Math.abs(dx) + Math.abs(dy);
-        if (distance < minDistance) minDistance = distance;
-      }
-
-      if (minDistance > largestMinDistance)
-      {
-        largestMinDistance = minDistance;
-        assignedNest = nest;
+        assignedNestCount++;
+        centerOfMassX += nest.centerX;
+        centerOfMassY += nest.centerY;
       }
     }
 
-    assignedNest.setClient(client, packetIn);
+    if (assignedNestCount < 1)
+    {
+      assignedNest = nestList.get(random.nextInt(nestList.size()));
+      if (DEBUG) System.out.println("Server: Totally Random Nest: "+assignedNest.nestName);
+    }
+    else
+    {
+      centerOfMassX /= assignedNestCount;
+      centerOfMassY /= assignedNestCount;
+      if (DEBUG) System.out.println("Server: Nest Center of Mass: ("+
+        centerOfMassX + ","+centerOfMassY+")");
+
+      int minDistance1 = Integer.MAX_VALUE;
+      int minDistance2 = Integer.MAX_VALUE;
+      Nest nearEmptyNest1 = null;
+      Nest nearEmptyNest2 = null;
+      for (Nest nest : nestList)
+      {
+        if (nest.team != null) continue;
+
+        int dx = nest.centerX - centerOfMassX;
+        int dy = nest.centerY - centerOfMassY;
+        int distance = Math.abs(dx) + Math.abs(dy);
+        if (distance < minDistance1)
+        {
+          minDistance1 = distance;
+          nearEmptyNest1 = nest;
+        }
+        else if (distance < minDistance2)
+        {
+          minDistance2 = distance;
+          nearEmptyNest2 = nest;
+        }
+      }
+      assignedNest = nearEmptyNest1;
+      if (nearEmptyNest2 != null)
+      { if (random.nextBoolean()) assignedNest = nearEmptyNest2;
+        if (DEBUG) System.out.println("Server: Nearest Nests: "+ nearEmptyNest1.nestName +
+          " & " + nearEmptyNest2.nestName);
+      }
+    }
+
+    if (assignedNest != null) assignedNest.setClient(client, packetIn);
 
     return assignedNest;
   }
