@@ -21,6 +21,12 @@ public class Server extends Thread
    * loses a connection due to timeout, can reconnect within a few minutes to find
    * the ants still in the world with NOOP commands assumed during the time when
    * no client directions were received.
+   *
+   *
+   *
+   *
+   * Running server in background:
+   *
    */
   public static final double TIMEOUT_CLIENT_TO_UNDERGROUND = 60*5;
 

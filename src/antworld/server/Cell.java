@@ -49,6 +49,7 @@ public class Cell
 
   public int getFoodUnits()
   {
+    if (gameObject == null) return 0;
     if (gameObject.objType != GameObjectType.FOOD) return 0;
     FoodData food = (FoodData) gameObject;
     return food.quantity;

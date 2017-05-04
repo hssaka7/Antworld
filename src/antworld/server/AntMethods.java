@@ -80,23 +80,28 @@ public class AntMethods
     Nest myNest = world.getNest(ant.nestName);
     
     if (action.type == AntActionType.HEAL)
-    { 
+    {
+      GameObjectType consumeType = GameObjectType.WATER;
       if (ant.state == AntState.UNDERGROUND)
       { if (ant.health >= ant.antType.getMaxHealth()) return AntActionType.NOOP;
-        if (myNest.getWaterCount() < 1) return AntActionType.NOOP;
-        int waterUnits = ant.antType.getHealWaterUnitsPerTick(AntState.UNDERGROUND);
-        if (waterUnits > myNest.getWaterCount()) waterUnits = myNest.getWaterCount();
-        if (waterUnits+ant.health > ant.antType.getMaxHealth())
-        {
-          waterUnits = ant.antType.getMaxHealth()-ant.health;
+        if (myNest.getWaterCount() < 1 && myNest.getFoodCount() < 1) return AntActionType.NOOP;
+        int consumeUnits = ant.antType.getHealWaterUnitsPerTick(AntState.UNDERGROUND);
+        if (consumeUnits > myNest.getWaterCount()) consumeUnits = myNest.getWaterCount();
+        if (consumeUnits == 0)
+        { consumeType = GameObjectType.FOOD;
+          consumeUnits = myNest.getFoodCount();
         }
-        myNest.addResource(GameObjectType.WATER, -waterUnits);
-        ant.health +=waterUnits;
+        if (consumeUnits+ant.health > ant.antType.getMaxHealth())
+        {
+          consumeUnits = ant.antType.getMaxHealth()-ant.health;
+        }
+        myNest.addResource(consumeType, -consumeUnits);
+        ant.health +=consumeUnits;
         return AntActionType.HEAL;
       }
       
       //OUT_AND_ABOUT heal
-      if (ant.carryType != GameObjectType.WATER) return AntActionType.NOOP;
+      if (ant.carryType == null) return AntActionType.NOOP;
       if (ant.carryUnits <= 0) return AntActionType.NOOP;
 
       //Note: it is ok for target ant to be self
@@ -104,14 +109,14 @@ public class AntMethods
       if (targetAnt == null) return AntActionType.NOOP;
       
       if (targetAnt.health >= targetAnt.antType.getMaxHealth()) return AntActionType.NOOP;
-      int waterUnits = ant.antType.getHealWaterUnitsPerTick(AntState.OUT_AND_ABOUT);
-      if (waterUnits > ant.carryUnits) waterUnits = ant.carryUnits;
-      if (waterUnits + targetAnt.health > targetAnt.antType.getMaxHealth())
+      int consumeUnits = ant.antType.getHealWaterUnitsPerTick(AntState.OUT_AND_ABOUT);
+      if (consumeUnits > ant.carryUnits) consumeUnits = ant.carryUnits;
+      if (consumeUnits + targetAnt.health > targetAnt.antType.getMaxHealth())
       {
-        waterUnits = targetAnt.antType.getMaxHealth() - targetAnt.health;
+        consumeUnits = targetAnt.antType.getMaxHealth() - targetAnt.health;
       }
-      ant.carryUnits -= waterUnits;
-      targetAnt.health += waterUnits;
+      ant.carryUnits -= consumeUnits;
+      targetAnt.health += consumeUnits;
       return AntActionType.HEAL;
     }
       
@@ -136,7 +141,9 @@ public class AntMethods
       Cell cellFrom = world.getCell(ant.gridX, ant.gridY);
 
       ant.action.quantity = ant.antType.getBaseMovementTicksPerCell();
-      if (cellTo.getHeight() > cellFrom.getHeight()) ant.action.quantity *= ant.antType.getUpHillMultiplier();
+      if (cellFrom.getLandType() != LandType.NEST && cellTo.getLandType() != LandType.NEST)
+      { if (cellTo.getHeight() > cellFrom.getHeight()) ant.action.quantity *= ant.antType.getUpHillMultiplier();
+      }
       if (ant.carryUnits > ant.antType.getCarryCapacity()/2)
       { ant.action.quantity *= ant.antType.getEncumbranceMultiplier();
       }
