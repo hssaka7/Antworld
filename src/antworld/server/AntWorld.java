@@ -597,7 +597,12 @@ public class AntWorld implements ActionListener
           System.out.println("   1) stop job by pressing ctrl-z");
           System.out.println("   2) disown -h %1  (where 1 is the job number displayed in step 1)");
           System.out.println("   3) bg 1");
-          System.out.println("   4) logout");
+          System.out.println("   4) logout\n");
+
+          System.out.println("When you went to exit the server:");
+          System.out.println("   1) login to the machine running the server.");
+          System.out.println("   2) ps -u <username>");
+          System.out.println("   3) kill -9 <jobNumber>");
         }
       }
     }
