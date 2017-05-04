@@ -590,7 +590,15 @@ public class AntWorld implements ActionListener
     {
       for (String field : args)
       {
-        if (field.equals("-nogui"))  showGUI = false;
+        if (field.equals("-nogui"))
+        { showGUI = false;
+          System.out.println("Running Headless....");
+          System.out.println("To keep the process running after logging out:");
+          System.out.println("   1) stop job by pressing ctrl-z");
+          System.out.println("   2) disown -h %1  (where 1 is the job number displayed in step 1)");
+          System.out.println("   3) bg 1");
+          System.out.println("   4) logout");
+        }
       }
     }
     new AntWorld(showGUI);
