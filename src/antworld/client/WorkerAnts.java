@@ -1,9 +1,6 @@
 package antworld.client;
 
-import antworld.common.AntData;
-import antworld.common.AntType;
-import antworld.common.Direction;
-import antworld.common.TeamNameEnum;
+import antworld.common.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +13,10 @@ public class WorkerAnts extends Ants{
     private boolean debug = true;
     private int spawnX;
     private int spawnY;
+
     private ArrayList<PathNode> path = new ArrayList<>();
+    private ArrayList<PathNode> returnPath = new ArrayList<>();
+
     private int pathStep;
     private AntData ant;
     private PathNode goal;
@@ -51,9 +51,52 @@ public class WorkerAnts extends Ants{
 
     }
 
-    @Override
-    public void update() {
-
+    public void update (){
+        if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
+        switch(antBehavior) {
+            case GATHER:
+            {
+                if (pathStep == path.size()-1){
+                    antBehavior = AntBehaviors.PICKUP;
+                    pathStep = 1;
+                    if (debug) System.out.println("Ant behavior changed from GATHER TO: " + antBehavior );
+                }
+                break;
+            }
+            case RETURN:
+            {
+                if (pathStep == returnPath.size()-1){
+                    antBehavior = AntBehaviors.DROP;
+                    pathStep = 1;
+                    if (debug) System.out.println("Ant behavior changed from RETURN TO: " + antBehavior );
+                }
+                break;
+            }
+            case PICKUP:
+            {
+                antBehavior = AntBehaviors.RETURN;
+                if (debug) System.out.println("Ant behavior changed from PICKUP TO: " + antBehavior );
+                break;
+            }
+            case DROP:
+            {
+                if (ant.state!= AntAction.AntState.UNDERGROUND) {
+                    antBehavior = AntBehaviors.GATHER;
+                    if (debug) System.out.println("Ant behavior changed from DROP TO: " + antBehavior);
+                }
+                break;
+            }
+            case PICKUPWATER:
+            {
+                if (this.path == null) {
+                    antBehavior = AntBehaviors.EXPLORE;
+                }
+                else {
+                    antBehavior = AntBehaviors.GOTO;
+                }
+                break;
+            }
+        }
     }
 
     @Override

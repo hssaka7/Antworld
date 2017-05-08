@@ -206,7 +206,7 @@ public class ArmyAntClient
             include.add(ant.id);
             if (debug) System.out.println("updating ant to list at index " + index + "with Id" + ant.id);
             if (!assigendAnts.isEmpty() &&  assigendAnts.containsKey(ant.id)) {
-                assigendAnts.get(ant.id).updateAnt(assigendAnt.get(ant.id));
+                assigendAnts.get(ant.id).updateAnt(ant);
             }
             else assigendAnt.get(ant.id).updateAnt(ant);
             index++;
