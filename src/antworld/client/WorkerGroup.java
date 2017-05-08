@@ -35,6 +35,7 @@ public class WorkerGroup {
         count = 3;
         for (int i = 0; i < count; i++)
         {
+            System.out.println("Adding Worker Ants");
             Ants tempData = new WorkerAnts(pathFinder,spawnX,spawnY,myTeam);
             ants.put(-(i*1),tempData);
             spawnCount++;
@@ -43,12 +44,15 @@ public class WorkerGroup {
     }
 
     ArrayList<Ants> getAntsList(){
+        System.out.println("Returning Ants");
         return new ArrayList<>(ants.values());
     }
 
     ArrayList<AntData> getAntList(){
+
         ArrayList<AntData> toReturn = new ArrayList<>();
         for (Ants ant : ants.values()){
+            System.out.println("Adding Worker Ant");
             toReturn.add(ant.getAnt());
         }
         return toReturn;
