@@ -11,4 +11,6 @@ public abstract class Ants {
     public abstract void updateAnt (AntData ant);
     public abstract void update();
     public abstract void setGoal(int x, int y);
+
+
 }

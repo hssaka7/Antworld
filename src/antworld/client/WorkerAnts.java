@@ -48,12 +48,51 @@ public class WorkerAnts extends Ants{
 
     @Override
     public void updateAnt(AntData ant) {
+        {
+            if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
+                if (this.ant.gridX == ant.gridX && this.ant.gridY== ant.gridY){
+                    moved = false;
+                    stuck++;
+                    if (stuck > 20){
+                        antBehavior = AntBehaviors.EXPLORE;
+                        dir = Direction.getRandomDir();
+                        stuck = 0;
+                    }
+                }
+                else {
+                    moved = true;
+                    stuck = 0;
+                    switch (antBehavior){
+                        case GOTO:
+                        {
+                            System.out.println("Updating AntPathStep");
+                            pathStep++;
+                            break;
+                        }
+                    }
+                }
+
+
+            }
+            this.ant = ant;
+            checkForWater++;
+            if (!checkCriticalConditions()) updateAntBehaviour();
+        }
 
     }
 
     public void update (){
         if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
         switch(antBehavior) {
+            case TOSPAWN:
+            {
+                if (ant.state == AntAction.AntState.UNDERGROUND){
+                    ant.action.type = AntAction.AntActionType.EXIT_NEST;
+                    ant.action.x = spawnX;
+                    ant.action.y = spawnY;
+                }
+                break;
+            }
             case GATHER:
             {
                 if (pathStep == path.size()-1){
@@ -97,6 +136,69 @@ public class WorkerAnts extends Ants{
                 break;
             }
         }
+    }
+
+    void updateAntBehaviour (){
+        if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
+
+        switch(antBehavior) {
+            case TOSPAWN:
+            {
+                if (ant.state == AntAction.AntState.OUT_AND_ABOUT){
+                    if (path != null || path.size() > 0){
+                        antBehavior = AntBehaviors.GOTO;
+                        pathStep = 1;
+                        return;
+                    }
+                    else{
+                        antBehavior = AntBehaviors.EXPLORE;
+                    }
+
+                }
+                break;
+            }
+            case PICKUPWATER:
+            {
+                if (ant.health < 20) {
+                    antBehavior = AntBehaviors.HEAL;
+                }
+                else{
+                    antBehavior = previousBehaviour;
+                }
+                break;
+            }
+            case HEAL:
+            {
+                if (healUnits>1 && ant.health < ant.antType.getMaxHealth()-3){
+                    healUnits--;
+                }
+                else {
+                    antBehavior = previousBehaviour;
+                    healUnits = 0;
+                    startedToheal = false;
+                }
+                break;
+            }
+        }
+    }
+
+    boolean checkCriticalConditions(){
+        if (antBehavior == AntBehaviors.PICKUPWATER || antBehavior == AntBehaviors.HEAL) return false;
+        if (ant.health < 10 && ant.carryUnits > 0){
+            previousBehaviour = antBehavior;
+            antBehavior = AntBehaviors.HEAL;
+            return true;
+        }
+        if (checkForWater < 50) return false;
+        if (pathFinder.getDirectionToWater(ant.gridX,ant.gridY)!=null){
+            if (ant.carryUnits < 3){
+                previousBehaviour = antBehavior;
+                antBehavior = AntBehaviors.PICKUPWATER;
+                checkForWater = 0;
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override

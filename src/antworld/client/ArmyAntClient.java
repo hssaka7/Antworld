@@ -174,6 +174,9 @@ public class ArmyAntClient
             explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
         }
 
+        WorkerGroup group = new WorkerGroup(myTeam,pathFinder,centerX+10, centerY);
+        addGroup(group,packetOut);
+
     }
 
     void addAnt (Ants ants, PacketToServer packetOut){
@@ -190,6 +193,7 @@ public class ArmyAntClient
     }
 
     void addGroup(WorkerGroup group, PacketToServer packetOut){
+        groups.add(group);
         for (Ants ants : group.getAntsList() ){
             addAnt(ants,group,packetOut);
         }
