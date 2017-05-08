@@ -6,10 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 
 import antworld.common.*;
 import antworld.common.AntAction.AntState;
@@ -68,6 +65,11 @@ public class ArmyAntClient
 
     private HashMap<Integer,Ants> assigendAnt= new HashMap<>(); //here integer is the ID number of ant
     private HashMap <Integer,Ants> unAssigendAnt= new HashMap<>(); // here integer is the index in the array
+
+    private HashMap<Integer,WorkerGroup> assigendAnts= new HashMap<>(); //here integer is the ID number of ant
+    private HashMap <Integer,WorkerGroup> unAssigendAnts= new HashMap<>(); // here integer is the index in the array
+
+    private ArrayList<WorkerGroup> groups = new ArrayList<>();
     private int birthCount; //number of ants being generated at each turn
 
     //Map utilities @KirtusL
@@ -79,6 +81,7 @@ public class ArmyAntClient
     private boolean debug;
     private boolean initial = true;
     private HashSet<Integer> include = new HashSet<>();
+    ArrayList<Integer> nodesTosearch;
 
 
 
@@ -105,6 +108,13 @@ public class ArmyAntClient
 
         mainGameLoop();
         closeAll();
+    }
+
+    void initializeNodesTosearch(){
+        nodesTosearch = new ArrayList<Integer>(Arrays.asList(308,1125,633,1419, 530,1157,95,1295,64,679,517,987,
+                320,938,39,379,379,49,596,543,853,273,733,394,913,113,1149,297,1667,213,940,673,2119,109,1824,84,1652,664,1927,
+                716,2155,1389,2419,1123,2475,873,2419,1123,2399,1279,2177,1363,2276,1273,1531,1165,1363,1049,822,776,644,1321,
+                309,1125,263,736,392,392,715,282,1199,116,1970,287,2232,126,2400,760,2157,1189,2403,1124,1818,1256,840,1316));
     }
 
     private boolean openConnection(String host, boolean reconnect)
@@ -157,14 +167,32 @@ public class ArmyAntClient
     }
 
     void createExplorers(PacketToServer packetOut){
-        ExplorerAnts explorer = new ExplorerAnts(pathFinder,centerX,centerY,myTeam);
-        addAnt(explorer, packetOut);
+        initializeNodesTosearch();
+        for (int i = 0; i <2; i+=2){
+            ExplorerAnts explorer = new ExplorerAnts(pathFinder,centerX,centerY,myTeam);
+            addAnt(explorer, packetOut);
+            explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
+        }
+
     }
 
     void addAnt (Ants ants, PacketToServer packetOut){
         unAssigendAnt.put(birthCount, ants);
         packetOut.myAntList.add(ants.getAnt());
         birthCount++;
+    }
+
+    void addAnt (Ants ants, WorkerGroup worker, PacketToServer packetOut){
+        unAssigendAnt.put(birthCount, ants);
+        unAssigendAnts.put(birthCount, worker);
+        packetOut.myAntList.add(ants.getAnt());
+        birthCount++;
+    }
+
+    void addGroup(WorkerGroup group, PacketToServer packetOut){
+        for (Ants ants : group.getAntsList() ){
+            addAnt(ants,group,packetOut);
+        }
     }
 
     void updateAntsfromServer (PacketToClient packetIn){
@@ -177,7 +205,10 @@ public class ArmyAntClient
         while (assigendAnt.containsKey(ant.id)){
             include.add(ant.id);
             if (debug) System.out.println("updating ant to list at index " + index + "with Id" + ant.id);
-            assigendAnt.get(ant.id).updateAnt(ant);
+            if (!assigendAnts.isEmpty() &&  assigendAnts.containsKey(ant.id)) {
+                assigendAnts.get(ant.id).updateAnt(assigendAnt.get(ant.id));
+            }
+            else assigendAnt.get(ant.id).updateAnt(ant);
             index++;
             if (index == antlist.size()) break;
             ant = antlist.get(index);
@@ -194,13 +225,23 @@ public class ArmyAntClient
             ant.gridY = 0;
             System.out.println("Removing ant to list at index " + i);
             Ants temp = unAssigendAnt.get(i);
-            assigendAnt.put(ant.id, temp);
-            include.add(ant.id);
-            temp.updateAnt(ant);
-            unAssigendAnt.remove(i);
+            if (!assigendAnts.isEmpty() && assigendAnts.containsKey(ant.id)) {
+                WorkerGroup group = unAssigendAnts.get(i);
+                assigendAnts.put(ant.id, group);
+                unAssigendAnts.get(ant.id).updateAnt(ant);
+                unAssigendAnts.remove(ant.id);
+            }
+            else
+            {
+                assigendAnt.put(ant.id, temp);
+                include.add(ant.id);
+                temp.updateAnt(ant);
+                unAssigendAnt.remove(i);
+            }
         }
 
         unAssigendAnt.clear();
+        unAssigendAnts.clear();
         birthCount = 0;
     }
 
@@ -333,9 +374,14 @@ public class ArmyAntClient
     {
 
         for (Ants ants : assigendAnt.values()){
-            if (!include.contains(ants.getAnt().id) && ants.getAnt().state!=AntState.UNDERGROUND) continue;
+            if (!include.contains(ants.getAnt().id) && ants.getAnt().state!=AntState.UNDERGROUND && assigendAnts.containsKey(ants.getAnt().id)) continue;
             ants.update();
             packetOut.myAntList.add(ants.getAnt());
+        }
+
+        for (WorkerGroup group: groups ){
+            group.chooseAction();
+            packetOut.myAntList.addAll(group.getAntList());
         }
         return packetOut;
     }
