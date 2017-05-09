@@ -78,7 +78,7 @@ public class ArmyAntClient
     private BufferedImage map; //The map to be used
     private PathFinder pathFinder;
 
-    private boolean debug;
+    private boolean debug = false;
     private boolean initial = true;
     private HashSet<Integer> include = new HashSet<>();
     ArrayList<Integer> nodesTosearch;
@@ -180,12 +180,14 @@ public class ArmyAntClient
     }
 
     void addAnt (Ants ants, PacketToServer packetOut){
+        System.out.println("Adding ants tp antList");
         unAssigendAnt.put(birthCount, ants);
         packetOut.myAntList.add(ants.getAnt());
         birthCount++;
     }
 
     void addAnt (Ants ants, WorkerGroup worker, PacketToServer packetOut){
+        System.out.println("Adding ants to group and antlist");
         unAssigendAnt.put(birthCount, ants);
         unAssigendAnts.put(birthCount, worker);
         packetOut.myAntList.add(ants.getAnt());
@@ -194,6 +196,7 @@ public class ArmyAntClient
 
     void addGroup(WorkerGroup group, PacketToServer packetOut){
         groups.add(group);
+        group.setGoal(centerX+15, centerY+15);
         for (Ants ants : group.getAntsList() ){
             addAnt(ants,group,packetOut);
         }
@@ -229,11 +232,13 @@ public class ArmyAntClient
             ant.gridY = 0;
             System.out.println("Removing ant to list at index " + i);
             Ants temp = unAssigendAnt.get(i);
-            if (!assigendAnts.isEmpty() && assigendAnts.containsKey(ant.id)) {
+            if (unAssigendAnts.containsKey(i)) {
                 WorkerGroup group = unAssigendAnts.get(i);
                 assigendAnts.put(ant.id, group);
-                unAssigendAnts.get(ant.id).updateAnt(ant);
-                unAssigendAnts.remove(ant.id);
+                assigendAnt.put(ant.id, temp);
+                group.updateAnt(ant);
+                unAssigendAnts.remove(i);
+                unAssigendAnt.remove(i);
             }
             else
             {
@@ -339,17 +344,15 @@ public class ArmyAntClient
 
 
 
-
             PacketToServer packetOut = new PacketToServer(myTeam);
+            updateAntsfromServer(packetIn);
+           chooseActionsOfAllAnts(packetIn,packetOut);
+
+
             if (initial){
                 createExplorers(packetOut);
                 initial = false;
             }
-
-
-
-            updateAntsfromServer(packetIn);
-           chooseActionsOfAllAnts(packetIn,packetOut);
             send(packetOut);
         }
     }
@@ -378,7 +381,7 @@ public class ArmyAntClient
     {
 
         for (Ants ants : assigendAnt.values()){
-            if (!include.contains(ants.getAnt().id) && ants.getAnt().state!=AntState.UNDERGROUND && assigendAnts.containsKey(ants.getAnt().id)) continue;
+            if (!include.contains(ants.getAnt().id)|| assigendAnts.containsKey(ants.getAnt().id)) continue;
             ants.update();
             packetOut.myAntList.add(ants.getAnt());
         }

@@ -278,6 +278,13 @@ public class ExplorerAnts extends Ants{
     {
         this.path = path;
     }
+
+    @Override
+    public void setReturnPath(ArrayList<PathNode> returnPath)
+    {
+
+    }
+
     public AntData getAnt()
     {
         return ant;
@@ -385,6 +392,7 @@ public class ExplorerAnts extends Ants{
 
     public void updateAnt(AntData ant)
     {
+        System.out.println("Updating Ant in ExplorerGroup " + ant.id);
         if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
             if (this.ant.gridX == ant.gridX && this.ant.gridY== ant.gridY){
                 moved = false;
@@ -467,6 +475,12 @@ public class ExplorerAnts extends Ants{
         System.out.println("Path from" + startNode + " to " + finalNode);
         System.out.println(pathToGoal);
         this.path = pathToGoal;
+
+    }
+
+    @Override
+    public void setGoal(PathNode goal)
+    {
 
     }
 

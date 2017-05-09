@@ -13,6 +13,7 @@ import java.util.HashMap;
  */
 public class WorkerGroup {
 
+    boolean debug = false;
     private final int spawnX;
     private final int spawnY;
     private final PathFinder pathFinder;
@@ -22,6 +23,8 @@ public class WorkerGroup {
 
     private ArrayList<PathNode> path = new ArrayList<>();
     private ArrayList<PathNode> returnPath = new ArrayList<>();
+
+    private ArrayList<Ants> newAnts = new ArrayList<>();
 
     PathNode start ;
     PathNode goal ;
@@ -35,17 +38,16 @@ public class WorkerGroup {
         count = 3;
         for (int i = 0; i < count; i++)
         {
-            System.out.println("Adding Worker Ants");
+            System.out.println("Adding Worker Ants " + i);
             Ants tempData = new WorkerAnts(pathFinder,spawnX,spawnY,myTeam);
-            ants.put(-(i*1),tempData);
-            spawnCount++;
+            newAnts.add(tempData);
         }
 
     }
 
     ArrayList<Ants> getAntsList(){
         System.out.println("Returning Ants");
-        return new ArrayList<>(ants.values());
+        return newAnts;
     }
 
     ArrayList<AntData> getAntList(){
@@ -59,12 +61,20 @@ public class WorkerGroup {
     }
 
     void updateAnt (AntData ant){
+        if (debug) System.out.println("Updating Ant in WorkerGroup " + ant.id);
         if (ant.state == AntAction.AntState.UNDERGROUND && !ants.containsKey(ant.id)){
-            if (spawnCount>-1) return;
-            ants.put(ant.id,ants.get(spawnCount*-1));
-            spawnCount--;
+           if (debug) System.out.println("Adding to List in Worker Group" + ant.id);
+            if (newAnts.size()<1 ) return;
+            Ants temp = newAnts.get(newAnts.size()-1);
+            temp.updateAnt(ant);
+            ants.put(ant.id,temp);
+            temp.setPath(path);
+            temp.setReturnPath(returnPath);
+            temp.setGoal(goal);
+            newAnts.remove(newAnts.size()-1);
             return;
         }
+        if (debug) System.out.println("Updating to List in Worker Group" + ant.id);
         ants.get(ant.id).updateAnt(ant);
     }
 

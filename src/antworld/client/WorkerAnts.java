@@ -19,7 +19,10 @@ public class WorkerAnts extends Ants{
 
     private int pathStep;
     private AntData ant;
+
     private PathNode goal;
+
+
     private AntBehaviors antBehavior;
     static HashMap<Integer, HashMap<Integer, Integer>> visited = new HashMap<>();
     private ArrayList<PathNode> undiiscoveredNodes= new ArrayList<>();
@@ -43,28 +46,60 @@ public class WorkerAnts extends Ants{
     }
     @Override
     public AntData getAnt() {
-        return null;
+        return ant;
+    }
+
+    void moveAnt(ArrayList<PathNode> path){
+        if (path.size() < 1) {
+            ant.action.type = AntAction.AntActionType.NOOP;
+            return;
+        }
+        if (debug) System.out.println("AntPathStep : " + pathStep + "Path Size : " + path.size());
+        int x = path.get(pathStep).getX();
+        int y = path.get(pathStep).getY();
+        PathNode antNode = new PathNode(ant.gridX, ant.gridY);
+        PathNode destination = new PathNode(x, y);
+
+        if (debug) System.out.println("start " + ant.gridX + "," + ant.gridY + " Goal" + destination.getX() + " " + destination.getY());
+        dir = antNode.getDirectionTo(destination);
+        if (dir == null) {
+            System.out.println("RETURNING NOOP");
+            ant.action.type = AntAction.AntActionType.MOVE;
+            ant.action.direction = Direction.getRandomDir();
+            antBehavior = AntBehaviors.EXPLORE;
+            System.out.println("Updating AntPathStep");
+            pathStep++;
+        }
+        else
+        {
+            ant.action.type = AntAction.AntActionType.MOVE;
+            ant.action.direction = dir;
+        }
+
+
     }
 
     @Override
-    public void updateAnt(AntData ant) {
+    public void updateAnt(AntData ant)
+    {
         {
+            System.out.println("Updating Ant in Ants");
             if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
-                if (this.ant.gridX == ant.gridX && this.ant.gridY== ant.gridY){
+                if (this.ant.gridX == ant.gridX && this.ant.gridY == ant.gridY) {
                     moved = false;
                     stuck++;
-                    if (stuck > 20){
+                    if (stuck > 20) {
                         antBehavior = AntBehaviors.EXPLORE;
                         dir = Direction.getRandomDir();
                         stuck = 0;
+                        return;
                     }
-                }
-                else {
+                } else {
                     moved = true;
                     stuck = 0;
-                    switch (antBehavior){
-                        case GOTO:
-                        {
+                    switch (antBehavior) {
+                        case GATHER:
+                        case RETURN: {
                             System.out.println("Updating AntPathStep");
                             pathStep++;
                             break;
@@ -76,13 +111,12 @@ public class WorkerAnts extends Ants{
             }
             this.ant = ant;
             checkForWater++;
-            if (!checkCriticalConditions()) updateAntBehaviour();
+            updateAntBehaviour();
         }
-
     }
 
     public void update (){
-        if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
+        if (debug) System.out.println("Updating Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
         switch(antBehavior) {
             case TOSPAWN:
             {
@@ -95,6 +129,65 @@ public class WorkerAnts extends Ants{
             }
             case GATHER:
             {
+                moveAnt(path);
+                break;
+            }
+            case RETURN:
+            {
+                moveAnt(returnPath);
+                break;
+
+            }
+            case PICKUP:
+            {
+                PathNode antNode = new PathNode(ant.gridX, ant.gridY);
+                dir = antNode.getDirectionTo(goal);
+                ant.action.type = AntAction.AntActionType.PICKUP;
+                ant.action.direction = dir;
+                ant.action.quantity = ant.antType.getCarryCapacity();
+                break;
+
+            }
+            case DROP:
+            {
+
+                if (ant.state == AntAction.AntState.UNDERGROUND) {
+                    {
+                        if (ant.carryUnits != 0) {
+                            ant.action.type = AntAction.AntActionType.DROP;
+                            ant.action.quantity = AntType.WORKER.getCarryCapacity();
+                        } else {
+                            ant.action.type = AntAction.AntActionType.EXIT_NEST;
+                            ant.action.x = spawnX;
+                            ant.action.y = spawnY;
+                        }
+                    }
+                }
+                else
+                {
+                    ant.action.type = AntAction.AntActionType.ENTER_NEST;
+                }
+                break;
+
+            }
+            case PICKUPWATER:
+            {
+                if (this.path == null) {
+                    antBehavior = AntBehaviors.EXPLORE;
+                }
+                else {
+                    antBehavior = AntBehaviors.GOTO;
+                }
+                break;
+            }
+        }
+    }
+
+    void updateAntBehaviour (){
+        if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
+        switch(antBehavior) {
+            case GATHER:
+            {
                 if (pathStep == path.size()-1){
                     antBehavior = AntBehaviors.PICKUP;
                     pathStep = 1;
@@ -104,7 +197,7 @@ public class WorkerAnts extends Ants{
             }
             case RETURN:
             {
-                if (pathStep == returnPath.size()-1){
+                if (pathStep == returnPath.size()){
                     antBehavior = AntBehaviors.DROP;
                     pathStep = 1;
                     if (debug) System.out.println("Ant behavior changed from RETURN TO: " + antBehavior );
@@ -125,28 +218,12 @@ public class WorkerAnts extends Ants{
                 }
                 break;
             }
-            case PICKUPWATER:
-            {
-                if (this.path == null) {
-                    antBehavior = AntBehaviors.EXPLORE;
-                }
-                else {
-                    antBehavior = AntBehaviors.GOTO;
-                }
-                break;
-            }
-        }
-    }
 
-    void updateAntBehaviour (){
-        if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
-
-        switch(antBehavior) {
             case TOSPAWN:
             {
                 if (ant.state == AntAction.AntState.OUT_AND_ABOUT){
                     if (path != null || path.size() > 0){
-                        antBehavior = AntBehaviors.GOTO;
+                        antBehavior = AntBehaviors.GATHER;
                         pathStep = 1;
                         return;
                     }
@@ -204,5 +281,17 @@ public class WorkerAnts extends Ants{
     @Override
     public void setGoal(int x, int y) {
 
+    }
+
+    public void setGoal(PathNode goal) {
+        this.goal= goal;
+    }
+
+    public void setPath(ArrayList<PathNode> path){
+        this.path = path;
+    }
+
+    public void setReturnPath(ArrayList<PathNode> returnPath){
+        this.returnPath = returnPath;
     }
 }
