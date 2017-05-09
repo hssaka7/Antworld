@@ -19,9 +19,7 @@ public class PathFinder
   private int mapWidth;
   private int mapHeight;
 
-  ////Initial Nodes and Paths Fields
-  //private ArrayList<PathNode> initialNodes = new ArrayList<>();
-  //private ArrayList<PathNode>[] initialPaths;
+
 
   private ArrayList<PathNode> emptyList = new ArrayList<>();
 
@@ -39,31 +37,6 @@ public class PathFinder
     mapHeight = map.getHeight();
   }
 
-  /**
-   * @param initialNodes The list of nodes to initialize
-   * @KirtusL This method initializes the initialNodes
-   */
-  //public void initializeNodes(ArrayList<PathNode> initialNodes) {
-//
-  //  System.out.println("Initializing: " + initialNodes.size() + "nodes!");
-//
-  //  this.initialNodes = initialNodes;
-//
-  //  initialPaths = new ArrayList[initialNodes.size() * (initialNodes.size() - 1)];
-  //  int i = 0;
-//
-  //  for (PathNode node : initialNodes) {
-  //    for (PathNode otherNode : initialNodes) {
-  //      if (!node.equals(otherNode)) {
-  //        System.out.println("Initializing " + i + "th path from: " + node + " to " + otherNode);
-  //        initialPaths[i] = generatePath(node, otherNode);
-  //        System.out.println("Path Initialized: " + initialPaths[i]);
-  //        i++;
-  //      }
-  //    }
-  //  }
-  //}
-//
 
   /**
    * @param start The start node
@@ -73,47 +46,6 @@ public class PathFinder
    */
   public ArrayList<PathNode> getPath(PathNode start, PathNode goal)
   {
-//
-    // System.out.println("Getting Path from: " + start + " to " + goal);
-//
-    // PathNode closestInitialNodeToStart = findClosestInitialNode(start); //The initial node closest to the start of the path
-    // PathNode closestInitialNodeToGoal = findClosestInitialNode(goal); //The initial node closest to the goal of the path
-//
-    // System.out.println("Found initial nodes: " + closestInitialNodeToStart + ", " + closestInitialNodeToGoal);
-//
-    // ArrayList<PathNode> pathStart = emptyList;
-    // ArrayList<PathNode> pathFinal = emptyList;
-    // ArrayList<PathNode> pathMiddle = emptyList;
-    // if (!closestInitialNodeToGoal.equals(closestInitialNodeToStart)) //Check if we need to use nodes
-    // {
-//
-    //   pathStart = generatePath(start, closestInitialNodeToStart);
-    //   pathFinal = generatePath(closestInitialNodeToGoal, goal);
-    //   pathMiddle = calculateTraversalPath(closestInitialNodeToStart, closestInitialNodeToGoal);
-//
-    //   if (pathStart.size() > 0) {
-    //     System.out.println("Start found: " + pathStart.get(0) + " to: " + pathStart.get(pathStart.size() - 1));
-    //   }
-    //   if (pathFinal.size() > 0) {
-    //     System.out.println("final found" + pathFinal.get(0) + " to: " + pathFinal.get(pathFinal.size() - 1));
-    //   }
-    //   if (pathMiddle.size() > 0) {
-    //     System.out.println("Middle found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
-    //   }
-    // } else {
-    //   pathMiddle = generatePath(start, goal);
-    //   if (pathMiddle.size() > 0)
-    //     System.out.println("Short Path found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
-    // }
-//
-//
-    // ArrayList<PathNode> path = new ArrayList<>();
-//
-//
-    // path.addAll(pathStart);
-    // path.addAll(pathMiddle);
-    // path.addAll(pathFinal);
-
     return generatePath(start, goal);
   }
 
@@ -139,25 +71,31 @@ public class PathFinder
 
     PathNode current;
 
-    while (frontier.size() > 0) {
+    while (frontier.size() > 0)
+    {
       current = getLowestF(frontier);
-      if (current.equals(last)) {
+      if (current.equals(last))
+      {
         return constructPath(current, first);
       }
       frontier.remove(current);
       removeFrom(current, frontierArray);
       addTo(current, visitedArray);
       adjacencyList = calcAdjacencies(current);
-      for (PathNode adjNode : adjacencyList) {
+      for (PathNode adjNode : adjacencyList)
+      {
         double tempG = current.getG() + distSquared(current, adjNode);
-        if (!checkArray(adjNode, visitedArray)) {
-          if (!checkArray(adjNode, frontierArray)) {
+        if (!checkArray(adjNode, visitedArray))
+        {
+          if (!checkArray(adjNode, frontierArray))
+          {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
             frontier.add(adjNode);
             addTo(adjNode, frontierArray);
-          } else if (tempG < adjNode.getG()) {
+          } else if (tempG < adjNode.getG())
+          {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
@@ -191,11 +129,13 @@ public class PathFinder
     ArrayList<PathNode> adjTiles = new ArrayList<PathNode>();
     int x = node.getX();
     int y = node.getY();
-    for (Direction dir : Direction.values()) {
+    for (Direction dir : Direction.values())
+    {
       int tempX = x + dir.deltaX();
       int tempY = y + dir.deltaY();
       PathNode tempNode = new PathNode(tempX, tempY);
-      if (nodeLegal(tempNode)) {
+      if (nodeLegal(tempNode))
+      {
         adjTiles.add(tempNode);
       }
     }
@@ -209,20 +149,25 @@ public class PathFinder
    */
   public boolean nodeLegal(PathNode node)
   {
-    if (node.getX() <= 0 || node.getX() >= map.getWidth()) {
+    if (node.getX() <= 0 || node.getX() >= map.getWidth())
+    {
       return false;
     }
-    if (node.getY() <= 0 || node.getY() >= map.getHeight()) {
+    if (node.getY() <= 0 || node.getY() >= map.getHeight())
+    {
       return false;
     }
     int rgb = (map.getRGB(node.getX(), node.getY()) & 0x00FFFFFF);
-    if (rgb == 0x329fff) {
+    if (rgb == 0x329fff)
+    {
       return false;
     }
-    if (antHere(node)) {
+    if (antHere(node))
+    {
       return false;
     }
-    if (exludeList.contains(node)) {
+    if (exludeList.contains(node))
+    {
       return false;
     }
     return true;
@@ -230,18 +175,16 @@ public class PathFinder
 
   public boolean antHere(PathNode node)
   {
-    for (AntData ant : antList) {
-      if (ant.gridX == node.getX() && ant.gridY == node.getY()) {
+    for (AntData ant : antList)
+    {
+      if (ant.gridX == node.getX() && ant.gridY == node.getY())
+      {
         return true;
       }
     }
     return false;
   }
 
-  public void setAntList(ArrayList<AntData> antList)
-  {
-    this.antList = antList;
-  }
 
   /**
    * A* helper method
@@ -275,8 +218,10 @@ public class PathFinder
   {
     PathNode lowestNode = frontier.get(0);
 
-    for (PathNode node : frontier) {
-      if (node.getF() <= lowestNode.getF()) {
+    for (PathNode node : frontier)
+    {
+      if (node.getF() <= lowestNode.getF())
+      {
         lowestNode = node;
       }
     }
@@ -293,17 +238,21 @@ public class PathFinder
   {
     ArrayList<PathNode> path = new ArrayList<PathNode>();
     boolean done = false;
-    while (!done) {
-      if (last == null) {
+    while (!done)
+    {
+      if (last == null)
+      {
         return path;
       }
 
       path.add(0, last);
-      if (last.equals(first)) {
+      if (last.equals(first))
+      {
         return path;
       }
       last = last.getParent();
-      if (last.equals(first)) {
+      if (last.equals(first))
+      {
         path.add(0, last);
         return path;
       }
@@ -311,44 +260,14 @@ public class PathFinder
     return path;
   }
 
-  /**
-   * @KirtusL
-   * This method returns the nearest initial node to the node passed in
-   * @param node
-   * The node that you wish to find the nearest node to
-   * @return
-   * The nearest initial node
-   */
-  //private PathNode findClosestInitialNode(PathNode node)
-  //{
-  //  PathNode nearest = initialNodes.get(0);
-  //  for(PathNode pNode: initialNodes)
-  //  {
-  //    if(distSquared(node, nearest) > distSquared(node, pNode))
-  //    {
-  //      nearest = pNode;
-  //    }
-  //  }
-  //  return nearest;
-  //}
 
   /**
-   * @param nodeOne The first initial Node
-   * @param nodeTwo The final initial Node
+   * @param start The first initial Node
+   * @param goal  The final initial Node
    * @return
    * @KirtusL This method returns the path between two initial nodes
    */
-  //private ArrayList<PathNode> calculateTraversalPath(PathNode nodeOne, PathNode nodeTwo)
-  //{
-  //  for(ArrayList<PathNode> path: initialPaths)
-  //  {
-  //    if (path.get(0).equals(nodeOne) && path.get(path.size() - 1).equals(nodeTwo))
-  //    {
-  //      return path;
-  //    }
-  //  }
-  //  return emptyList;
-  //}
+
   public ArrayList<PathNode> getPathSelective(PathNode start, PathNode goal, ArrayList<PathNode> exludeList)
   {
     this.exludeList.addAll(exludeList);
@@ -373,60 +292,24 @@ public class PathFinder
     return ((dx * dx + dy * dy));
   }
 
-  public void printPath(ArrayList<PathNode> path)
-  {
-    if (path == null || path.size() < 1) {
-      System.out.println("NULL PATH or ZERO SIZE");
-      return;
-    }
-    PathNode Start = path.get(0);
-    PathNode goal = path.get(path.size() - 1);
-
-    System.out.println("Start : " + Start + " Goal : " + goal + " has PathSize " + path.size());
-    for (PathNode pathnode : path) {
-      System.out.println(pathnode);
-    }
-  }
 
   public void setMap(BufferedImage map)
   {
     this.map = map;
   }
 
-  /**
-   * @return Array of initial paths
-   * @KirtusL Getter for initial paths, used for writing paths to file
-   */
-//public ArrayList<PathNode>[] getInitialPaths()
-//{
-//  return initialPaths;
-//}
-
-//public void setInitialPaths(ArrayList<PathNode>[] initialPaths)
-//{
-//  this.initialPaths = initialPaths;
-
-//  for(ArrayList<PathNode> path: initialPaths)
-//  {
-//    PathNode start = path.get(0);
-//    if(!initialNodes.contains(start))
-//    {
-//      initialNodes.add(start);
-//    }
-//  }
-
-//}
 
   Direction getDirectionToWater(int x, int y)
   {
 
     Direction dir = Direction.EAST;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++)
+    {
       int newX = x + dir.deltaX();
       int newY = y + dir.deltaY();
       int rgb = map.getRGB(newX, newY) & 0x00FFFFFF;
-      System.out.println("Direction " + dir + " has rgb value " + rgb);
-      if (rgb == 0x329fff) {
+      if (rgb == 0x329fff)
+      {
         return dir;
       }
       dir = Direction.getLeftDir(dir);

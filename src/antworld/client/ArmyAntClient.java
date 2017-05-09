@@ -1,9 +1,6 @@
 package antworld.client;
 
 import antworld.common.*;
-import antworld.common.AntAction.AntActionType;
-import antworld.common.AntAction.AntState;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -126,24 +123,29 @@ public class ArmyAntClient
   private boolean openConnection(String host, boolean reconnect)
   {
     if (debug) System.out.println("opening connection");
-    try {
+    try
+    {
       clientSocket = new Socket(host, Constants.PORT);
-    } catch (UnknownHostException e) {
+    } catch (UnknownHostException e)
+    {
       System.err.println("Client Error: Unknown Host " + host);
       e.printStackTrace();
       return false;
-    } catch (IOException e) {
+    } catch (IOException e)
+    {
       System.err.println("Client Error: Could not open connection to " + host
       + " on port " + Constants.PORT);
       e.printStackTrace();
       return false;
     }
 
-    try {
+    try
+    {
       outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
       inputStream = new ObjectInputStream(clientSocket.getInputStream());
 
-    } catch (IOException e) {
+    } catch (IOException e)
+    {
       System.err.println("Client Error: Could not open i/o streams");
       e.printStackTrace();
       return false;
@@ -152,11 +154,11 @@ public class ArmyAntClient
     PacketToServer packetOut = new PacketToServer(myTeam);
 
     if (reconnect) packetOut.myAntList = null;
-    else {
+    else
+    {
       //Connected!
     }
 
-    /*Make first move here, a move is being waster*/
 
     send(packetOut);
     return true;
@@ -170,7 +172,8 @@ public class ArmyAntClient
    */
   void updateReceivedData(PacketToClient packetToClient, PacketToServer packetOut)
   {
-    if (packetToClient.foodList != null && packetToClient.foodList.size() > 0) {
+    if (packetToClient.foodList != null && packetToClient.foodList.size() > 0)
+    {
       updateFoodSites(packetToClient.foodList, packetOut);
     }
   }
@@ -182,10 +185,13 @@ public class ArmyAntClient
    */
   void updateFoodSites(ArrayList<FoodData> foodList, PacketToServer packetOut)
   {
-    for (FoodData food : foodList) {
-      if (!isContainedinFoodList(food)) {
+    for (FoodData food : foodList)
+    {
+      if (!isContainedinFoodList(food))
+      {
         addFoodData(food, packetOut);
-      } else {
+      } else
+      {
         updateFoodData(food);
       }
     }
@@ -199,9 +205,13 @@ public class ArmyAntClient
    */
   void addFoodData(FoodData food, PacketToServer packetOut)
   {
-    if (food.quantity > 20) {
-      WorkerGroup group = new WorkerGroup(myTeam, pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
-      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)));
+    if (food.quantity > 20)
+    {
+      Direction randDir = Direction.getRandomDir();
+      WorkerGroup group = new WorkerGroup(myTeam, pathFinder, centerX - randDir.deltaX() * random.nextInt(10),
+      centerY - randDir.deltaY() * random.nextInt(10));
+
+
       group.setGoal(food.gridX, food.gridY);
       addGroup(group, packetOut);
       clientFoodList.put(getDistance(food), food);
@@ -225,22 +235,35 @@ public class ArmyAntClient
   void createExplorers(PacketToServer packetOut)
   {
     initializeNodesTosearch();
-    for (int i = 0; i < nodesTosearch.size(); i += 2) {
-      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
-      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)), myTeam);
+    for (int i = 0; i < nodesTosearch.size(); i += 2)
+    {
+      Direction randDir = Direction.getRandomDir();
+      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - randDir.deltaX() * random.nextInt(7),
+      centerY - randDir.deltaY() * random.nextInt(7), myTeam);
       addAnt(explorer, packetOut);
       explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i + 1));
     }
 //
   }
 
-  void createSmallExplorers(PacketToServer packetOut)
+  /**
+   * @Kirtus
+   * Adds small group
+   * @param packetOut
+   * @param packetIn
+   */
+  void createSmallExplorers(PacketToServer packetOut, PacketToClient packetIn)
   {
     initializeNodesTosearch();
-    for (int i = 0; i < 1; i += 2) {
-      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
-      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)), myTeam);
-      addAnt(explorer, packetOut);
+    if (packetIn.nestData[myNestName.ordinal()].foodInNest > 50)
+    {
+      for (int i = 0; i < 1; i += 2)
+      {
+        Direction randDir = Direction.getRandomDir();
+        ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - randDir.deltaX() * random.nextInt(7),
+        centerY - randDir.deltaY() * random.nextInt(7), myTeam);
+        addAnt(explorer, packetOut);
+      }
     }
   }
 
@@ -252,7 +275,8 @@ public class ArmyAntClient
   boolean isContainedinFoodList(FoodData food)
   {
     int foodDistance = getDistance(food);
-    for (Integer distance : clientFoodList.keySet()) {
+    for (Integer distance : clientFoodList.keySet())
+    {
       if (distance == foodDistance) return true;
     }
     return false;
@@ -281,6 +305,14 @@ public class ArmyAntClient
     birthCount++;
   }
 
+  /**
+   * @HImanshu
+   * @param ants
+   * @param worker
+   * @param packetOut
+   *
+   * Adds ants , this is designed for worker group
+   */
   void addAnt(Ants ants, WorkerGroup worker, PacketToServer packetOut)
   {
     System.out.println("Adding ants to group and antlist");
@@ -298,14 +330,17 @@ public class ArmyAntClient
   void addGroup(WorkerGroup group, PacketToServer packetOut)
   {
     groups.add(group);
-    for (Ants ants : group.getAntsList()) {
+    for (Ants ants : group.getAntsList())
+    {
       addAnt(ants, group, packetOut);
     }
   }
 
   /**
-   * @param packetIn updates ants received from srver to the data structure i client side
    * @Himanshu
+   * @param packetIn
+   * updates ants received from srver to the data structure i client side
+   *
    */
   void updateAntsfromServer(PacketToClient packetIn)
   {
@@ -315,10 +350,12 @@ public class ArmyAntClient
 
     int index = 0;
     AntData ant = antlist.get(index);
-    while (assigendAnt.containsKey(ant.id)) {
+    while (assigendAnt.containsKey(ant.id))
+    {
       include.add(ant.id);
       if (debug) System.out.println("updating ant to list at index " + index + "with Id" + ant.id);
-      if (!assigendAnts.isEmpty() && assigendAnts.containsKey(ant.id)) {
+      if (!assigendAnts.isEmpty() && assigendAnts.containsKey(ant.id))
+      {
         assigendAnts.get(ant.id).updateAnt(ant);
       } else assigendAnt.get(ant.id).updateAnt(ant);
       index++;
@@ -326,22 +363,26 @@ public class ArmyAntClient
       ant = antlist.get(index);
     }
 
-    for (int i = 0; i < birthCount; i++) {
-      if (index + i < antlist.size()) {
+    for (int i = 0; i < birthCount; i++)
+    {
+      if (index + i < antlist.size())
+      {
         ant = antlist.get(index + i);
       }
       ant.gridX = 0;
       ant.gridY = 0;
       if (debug) System.out.println("Removing ant to list at index " + i);
       Ants temp = unAssigendAnt.get(i);
-      if (unAssigendAnts.containsKey(i)) {
+      if (unAssigendAnts.containsKey(i))
+      {
         WorkerGroup group = unAssigendAnts.get(i);
         assigendAnts.put(ant.id, group);
         assigendAnt.put(ant.id, temp);
         group.updateAnt(ant);
         unAssigendAnts.remove(i);
         unAssigendAnt.remove(i);
-      } else {
+      } else
+      {
         assigendAnt.put(ant.id, temp);
         include.add(ant.id);
         temp.updateAnt(ant);
@@ -358,11 +399,13 @@ public class ArmyAntClient
   {
     System.out.println("ClientRandomWalk.closeAll()");
     {
-      try {
+      try
+      {
         if (outputStream != null) outputStream.close();
         if (inputStream != null) inputStream.close();
         clientSocket.close();
-      } catch (IOException e) {
+      } catch (IOException e)
+      {
         System.err.println("ClientRandomWalk Error: Could not close");
         e.printStackTrace();
       }
@@ -401,24 +444,29 @@ public class ArmyAntClient
   public void mainGameLoop()
   {
 
-    while (true) {
+    while (true)
+    {
       PacketToClient packetIn = null;
-      try {
+      try
+      {
         if (DEBUG) System.out.println("ClientRandomWalk: listening to socket....");
         packetIn = (PacketToClient) inputStream.readObject();
         if (DEBUG)
           System.out.println("ClientRandomWalk: received <<<<<<<<<" + inputStream.available() + "<...\n" + packetIn);
 
-        if (packetIn.myNest == null) {
+        if (packetIn.myNest == null)
+        {
           System.err.println("ClientRandomWalk***ERROR***: Server returned NULL nest");
           System.exit(0);
         }
-      } catch (IOException e) {
+      } catch (IOException e)
+      {
         System.err.println("ClientRandomWalk***ERROR***: client read failed");
         e.printStackTrace();
         System.exit(0);
 
-      } catch (ClassNotFoundException e) {
+      } catch (ClassNotFoundException e)
+      {
         System.err.println("ServerToClientConnection***ERROR***: client sent incorrect common format");
         e.printStackTrace();
         System.exit(0);
@@ -426,7 +474,8 @@ public class ArmyAntClient
 
 
       if (myNestName == null) setupNest(packetIn);
-      if (myNestName != packetIn.myNest) {
+      if (myNestName != packetIn.myNest)
+      {
         System.err.println("Army: !!!!ERROR!!!! " + myNestName);
       }
 
@@ -439,15 +488,17 @@ public class ArmyAntClient
       chooseActionsOfAllAnts(packetIn, packetOut);
 
 
-      if (initial) {
+      if (initial)
+      {
         System.out.println("Building Paths : will Take a while");
         createExplorers(packetOut);
         initial = false;
       }
       updateReceivedData(packetIn, packetOut);
 
-      if (gametick % 400 == 0) {
-        createSmallExplorers(packetOut);
+      if (gametick % 400 == 0)
+      {
+        createSmallExplorers(packetOut, packetIn);
         gametick = 0;
       }
       gametick++;
@@ -460,12 +511,14 @@ public class ArmyAntClient
 
   private void send(PacketToServer packetOut)
   {
-    try {
+    try
+    {
       System.out.println("Army: Sending>>>>>>>: " + packetOut);
       outputStream.writeObject(packetOut);
       outputStream.flush();
       outputStream.reset();
-    } catch (IOException e) {
+    } catch (IOException e)
+    {
       System.err.println("Army***ERROR***: client write failed");
       e.printStackTrace();
       System.exit(0);
@@ -476,13 +529,15 @@ public class ArmyAntClient
   private PacketToServer chooseActionsOfAllAnts(PacketToClient packetIn, PacketToServer packetOut)
   {
 
-    for (Ants ants : assigendAnt.values()) {
+    for (Ants ants : assigendAnt.values())
+    {
       if (!include.contains(ants.getAnt().id) || assigendAnts.containsKey(ants.getAnt().id)) continue;
       ants.update();
       packetOut.myAntList.add(ants.getAnt());
     }
 
-    for (WorkerGroup group : groups) {
+    for (WorkerGroup group : groups)
+    {
       group.chooseAction();
       packetOut.myAntList.addAll(group.getAntList());
     }
@@ -490,109 +545,6 @@ public class ArmyAntClient
   }
 
 
-  //=============================================================================
-  // This method sets the given action to EXIT_NEST if and only if the given
-  //   ant is underground.
-  // Returns true if an action was set. Otherwise returns false
-  //=============================================================================
-  private boolean exitNest(AntData ant, AntAction action)
-  {
-    if (ant.state == AntState.UNDERGROUND) {
-      action.type = AntActionType.EXIT_NEST;
-      action.x = centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1));
-      action.y = centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1));
-      return true;
-    }
-    return false;
-  }
-
-
-  private boolean attackAdjacent(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean pickUpFoodAdjacent(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goHomeIfCarryingOrHurt(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean pickUpWater(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goToEnemyAnt(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goToFood(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goToGoodAnt(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goExplore(AntData ant, AntAction action)
-  {
-    Direction dir = Direction.getRandomDir();
-    action.type = AntActionType.MOVE;
-    action.direction = dir;
-    return true;
-  }
-
-
-  private AntAction chooseAction(PacketToClient data, AntData ant)
-  {
-    AntAction action = new AntAction(AntActionType.NOOP);
-
-    if (ant.action.type == AntActionType.BUSY) {
-      //TODO: Now that the server has told you this ant is BUSY,
-      //   The server will stop including it in updates until its state changes
-      //   from BUSY to NOOP. At that point, the ant will have wasted a turn in NOOP
-      //   that it could have used to do something. Therefore,
-      //   the client should save this ant in some structure (such as a HashSet).
-      return action;
-    }
-
-    //This is simple example of possible actions in order of what you might consider
-    //   precedence.
-    if (exitNest(ant, action)) return action;
-
-    if (attackAdjacent(ant, action)) return action;
-
-    if (pickUpFoodAdjacent(ant, action)) return action;
-
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-    if (pickUpWater(ant, action)) return action;
-
-    if (goToEnemyAnt(ant, action)) return action;
-
-    if (goToFood(ant, action)) return action;
-
-    if (goToGoodAnt(ant, action)) return action;
-
-    if (goExplore(ant, action)) return action;
-
-    return action;
-  }
-
-  private static String usage()
-  {
-    return "Usage:\n    [-h hostname] [-t teamname] [-r]\n\n" +
-    "Each argument group is optional and can be in any order.\n" +
-    "-r specifies that the client is reconnecting.";
-  }
 
 
   /**
@@ -606,7 +558,8 @@ public class ArmyAntClient
 
     //TeamNameEnum team = TeamNameEnum.RandomWalkers;
     TeamNameEnum team = TeamNameEnum.Army;
-    if (args.length > 1) {
+    if (args.length > 1)
+    {
       team = TeamNameEnum.getTeamByString(args[0]);
     }
 

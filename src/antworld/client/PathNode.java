@@ -49,14 +49,18 @@ class PathNode
   @Override
   public boolean equals(Object o)
   {
-    if (o == null) {
+    if (o == null)
+    {
       return false;
     }
-    if (o.getClass() != getClass()) {
+    if (o.getClass() != getClass())
+    {
       return false;
-    } else {
+    } else
+    {
       PathNode other = (PathNode) o;
-      if (other.getX() == x && other.getY() == y) {
+      if (other.getX() == x && other.getY() == y)
+      {
         return true;
       }
     }
@@ -131,11 +135,10 @@ class PathNode
     int deltaX = pathNode.getX() - x;
     int deltaY = pathNode.getY() - y;
 
-    System.out.println("(dx, dy): " + deltaX + ", " + deltaY);
-
     if (deltaX == 1) //pathnode is to the East
     {
-      switch (deltaY) {
+      switch (deltaY)
+      {
         case -1: //pathnode is to the NE
           return Direction.NORTHEAST;
         case 0: //pathnode is directly E
@@ -147,7 +150,8 @@ class PathNode
       }
     } else if (deltaX == 0) //Pathnode is north or south
     {
-      switch (deltaY) {
+      switch (deltaY)
+      {
         case -1: //pathnode is to the N
           return Direction.NORTH;
         case 1: //pathnode is S
@@ -159,7 +163,8 @@ class PathNode
       }
     } else if (deltaX == -1) //Pathnode is West
     {
-      switch (deltaY) {
+      switch (deltaY)
+      {
         case -1: //pathnode is to the NW
           return Direction.NORTHWEST;
         case 0: //pathnode is directly W
@@ -175,16 +180,19 @@ class PathNode
 
   public boolean isAdjacent(PathNode otherNode)
   {
-    for (Direction dir : Direction.values()) {
+    for (Direction dir : Direction.values())
+    {
       int tempX = x + dir.deltaX();
       int tempY = y + dir.deltaY();
-      if (otherNode.equals(new PathNode(tempX, tempY))) {
+      if (otherNode.equals(new PathNode(tempX, tempY)))
+      {
         return true;
       }
     }
     int tempX = x;
     int tempY = y;
-    if (otherNode.equals(new PathNode(tempX, tempY))) {
+    if (otherNode.equals(new PathNode(tempX, tempY)))
+    {
       return true;
     }
     return false;

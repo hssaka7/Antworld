@@ -22,11 +22,8 @@ public class WorkerAnts extends Ants
   private AntData ant;
 
   private PathNode goal;
-
-
   private AntBehaviors antBehavior;
-  static HashMap<Integer, HashMap<Integer, Integer>> visited = new HashMap<>();
-  private ArrayList<PathNode> undiiscoveredNodes = new ArrayList<>();
+
   private Direction dir;
   private boolean moved = false;
   private PathFinder pathFinder;
@@ -53,9 +50,16 @@ public class WorkerAnts extends Ants
     return ant;
   }
 
+  /**
+   * @HImanshu
+   * @param path
+   *
+   * Move the ants given a path
+   */
   void moveAnt(ArrayList<PathNode> path)
   {
-    if (path.size() < 1) {
+    if (path.size() < 1)
+    {
       ant.action.type = AntAction.AntActionType.NOOP;
       return;
     }
@@ -68,14 +72,16 @@ public class WorkerAnts extends Ants
     if (debug)
       System.out.println("start " + ant.gridX + "," + ant.gridY + " Goal" + destination.getX() + " " + destination.getY());
     dir = antNode.getDirectionTo(destination);
-    if (dir == null) {
+    if (dir == null)
+    {
       if (debug) System.out.println("RETURNING NOOP");
       ant.action.type = AntAction.AntActionType.MOVE;
       ant.action.direction = Direction.getRandomDir();
       antBehavior = AntBehaviors.EXPLORE;
       if (debug) System.out.println("Updating AntPathStep");
       pathStep++;
-    } else {
+    } else
+    {
       ant.action.type = AntAction.AntActionType.MOVE;
       ant.action.direction = dir;
     }
@@ -84,26 +90,35 @@ public class WorkerAnts extends Ants
   }
 
   @Override
+  /**
+   * Updates the ant stored inside Ants structure
+   */
   public void updateAnt(AntData ant)
   {
     {
       if (debug) System.out.println("Updating Ant in Ants");
-      if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
-        if (this.ant.gridX == ant.gridX && this.ant.gridY == ant.gridY) {
+      if (ant.state == AntAction.AntState.OUT_AND_ABOUT)
+      {
+        if (this.ant.gridX == ant.gridX && this.ant.gridY == ant.gridY)
+        {
           moved = false;
           stuck++;
-          if (stuck > 20) {
+          if (stuck > 20)
+          {
             antBehavior = AntBehaviors.EXPLORE;
             dir = Direction.getRandomDir();
             stuck = 0;
             return;
           }
-        } else {
+        } else
+        {
           moved = true;
           stuck = 0;
-          switch (antBehavior) {
+          switch (antBehavior)
+          {
             case GATHER:
-            case RETURN: {
+            case RETURN:
+            {
               if (debug) System.out.println("Updating AntPathStep");
               pathStep++;
               break;
@@ -120,30 +135,37 @@ public class WorkerAnts extends Ants
   }
 
   /**
-   * @Himanshu Makes the worker group to gather food
+   * @Himanshu
+   * Makes the worker group to gather food and then switch states when appropriate
    */
   public void update()
   {
     if (debug) System.out.println("Updating Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
-    switch (antBehavior) {
-      case TOSPAWN: {
-        if (ant.state == AntAction.AntState.UNDERGROUND) {
+    switch (antBehavior)
+    {
+      case TOSPAWN:
+      {
+        if (ant.state == AntAction.AntState.UNDERGROUND)
+        {
           ant.action.type = AntAction.AntActionType.EXIT_NEST;
           ant.action.x = spawnX;
           ant.action.y = spawnY;
         }
         break;
       }
-      case GATHER: {
+      case GATHER:
+      {
         moveAnt(path);
         break;
       }
-      case RETURN: {
+      case RETURN:
+      {
         moveAnt(returnPath);
         break;
 
       }
-      case PICKUP: {
+      case PICKUP:
+      {
         PathNode antNode = new PathNode(ant.gridX, ant.gridY);
         dir = antNode.getDirectionTo(goal);
         ant.action.type = AntAction.AntActionType.PICKUP;
@@ -152,28 +174,35 @@ public class WorkerAnts extends Ants
         break;
 
       }
-      case DROP: {
+      case DROP:
+      {
 
-        if (ant.state == AntAction.AntState.UNDERGROUND) {
+        if (ant.state == AntAction.AntState.UNDERGROUND)
+        {
           {
-            if (ant.carryUnits != 0) {
+            if (ant.carryUnits != 0)
+            {
               ant.action.type = AntAction.AntActionType.DROP;
               ant.action.quantity = AntType.WORKER.getCarryCapacity();
-            } else {
+            } else
+            {
               ant.action.type = AntAction.AntActionType.EXIT_NEST;
               ant.action.x = spawnX;
               ant.action.y = spawnY;
             }
           }
-        } else {
+        } else
+        {
           ant.action.type = AntAction.AntActionType.ENTER_NEST;
         }
         break;
 
       }
-      case PICKUPWATER: {
+      case PICKUPWATER:
+      {
         dir = pathFinder.getDirectionToWater(ant.gridX, ant.gridY);
-        if (dir == null) {
+        if (dir == null)
+        {
           antBehavior = previousBehaviour;
           return;
         }
@@ -183,9 +212,11 @@ public class WorkerAnts extends Ants
         break;
       }
 
-      case HEAL: {
+      case HEAL:
+      {
         ant.action.type = AntAction.AntActionType.HEAL;
-        if (!startedToheal) {
+        if (!startedToheal)
+        {
           healUnits = ant.carryUnits;
           startedToheal = true;
         }
@@ -201,58 +232,74 @@ public class WorkerAnts extends Ants
   void updateAntBehaviour()
   {
     if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
-    switch (antBehavior) {
-      case GATHER: {
-        if (pathStep == path.size() - 1) {
+    switch (antBehavior)
+    {
+      case GATHER:
+      {
+        if (pathStep == path.size() - 1)
+        {
           antBehavior = AntBehaviors.PICKUP;
           pathStep = 1;
           if (debug) System.out.println("Ant behavior changed from GATHER TO: " + antBehavior);
         }
         break;
       }
-      case RETURN: {
-        if (pathStep == returnPath.size()) {
+      case RETURN:
+      {
+        if (pathStep == returnPath.size())
+        {
           antBehavior = AntBehaviors.DROP;
           pathStep = 1;
           if (debug) System.out.println("Ant behavior changed from RETURN TO: " + antBehavior);
         }
         break;
       }
-      case PICKUP: {
+      case PICKUP:
+      {
         antBehavior = AntBehaviors.RETURN;
         if (debug) System.out.println("Ant behavior changed from PICKUP TO: " + antBehavior);
         break;
       }
-      case DROP: {
-        if (ant.state != AntAction.AntState.UNDERGROUND) {
+      case DROP:
+      {
+        if (ant.state != AntAction.AntState.UNDERGROUND)
+        {
           antBehavior = AntBehaviors.GATHER;
           if (debug) System.out.println("Ant behavior changed from DROP TO: " + antBehavior);
         }
         break;
       }
 
-      case TOSPAWN: {
-        if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
-          if (path != null || path.size() > 0) {
+      case TOSPAWN:
+      {
+        if (ant.state == AntAction.AntState.OUT_AND_ABOUT)
+        {
+          if (path != null || path.size() > 0)
+          {
             antBehavior = AntBehaviors.GATHER;
             pathStep = 1;
             return;
-          } else {
+          } else
+          {
             antBehavior = AntBehaviors.EXPLORE;
           }
 
         }
         break;
       }
-      case PICKUPWATER: {
+      case PICKUPWATER:
+      {
         antBehavior = AntBehaviors.HEAL;
 
         break;
       }
-      case HEAL: {
-        if (healUnits > 1) {
+      case HEAL:
+      {
+        if (healUnits > 1)
+        {
           healUnits--;
-        } else {
+        } else
+        {
           antBehavior = previousBehaviour;
           healUnits = 0;
           startedToheal = false;
@@ -269,14 +316,17 @@ public class WorkerAnts extends Ants
   boolean checkCriticalConditions()
   {
     if (antBehavior == AntBehaviors.PICKUPWATER || antBehavior == AntBehaviors.HEAL) return false;
-    if (ant.health < 3 && ant.carryUnits > 0) {
+    if (ant.health < 3 && ant.carryUnits > 0)
+    {
       previousBehaviour = antBehavior;
       antBehavior = AntBehaviors.HEAL;
       return true;
     }
     if (checkForWater < 50) return false;
-    if (pathFinder.getDirectionToWater(ant.gridX, ant.gridY) != null) {
-      if (ant.health < ant.antType.getMaxHealth() - 5 && ant.carryUnits == 0) {
+    if (pathFinder.getDirectionToWater(ant.gridX, ant.gridY) != null)
+    {
+      if (ant.health < ant.antType.getMaxHealth() - 5 && ant.carryUnits == 0)
+      {
         previousBehaviour = antBehavior;
         antBehavior = AntBehaviors.PICKUPWATER;
         checkForWater = 0;

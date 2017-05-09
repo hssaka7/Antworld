@@ -17,7 +17,8 @@ public enum AntBehaviors
    * EXPLODE_EXPLORE,
    * has 2 stages, goto point, then explode and explore randomly
    */
-  EXPLODE_EXPLORE {
+  EXPLODE_EXPLORE
+  {
     public int getStages()
     {
       return 2;

@@ -47,8 +47,9 @@ public class WorkerGroup
     this.spawnY = spawnY;
     this.pathFinder = pathFinder;
     count = 3;
-    for (int i = 0; i < count; i++) {
-      System.out.println("Adding Worker Ants " + i);
+    for (int i = 0; i < count; i++)
+    {
+      if (debug) System.out.println("Adding Worker Ants " + i);
       Ants tempData = new WorkerAnts(pathFinder, spawnX, spawnY, myTeam);
       newAnts.add(tempData);
     }
@@ -73,9 +74,10 @@ public class WorkerGroup
   {
 
     ArrayList<AntData> toReturn = new ArrayList<>();
-    for (Ants ant : ants.values()) {
+    for (Ants ant : ants.values())
+    {
       if (!include.contains(ant.getAnt().id)) continue;
-      System.out.println("Adding Worker Ant");
+      if (debug) System.out.println("Adding Worker Ant");
       toReturn.add(ant.getAnt());
     }
     include.clear();
@@ -91,7 +93,8 @@ public class WorkerGroup
   {
     include.add(ant.id);
     if (debug) System.out.println("Updating Ant in WorkerGroup " + ant.id);
-    if (ant.state == AntAction.AntState.UNDERGROUND && !ants.containsKey(ant.id)) {
+    if (ant.state == AntAction.AntState.UNDERGROUND && !ants.containsKey(ant.id))
+    {
       if (debug) System.out.println("Adding to List in Worker Group" + ant.id);
       if (newAnts.size() < 1) return;
       Ants temp = newAnts.get(newAnts.size() - 1);
@@ -104,14 +107,16 @@ public class WorkerGroup
       return;
     }
     if (debug) System.out.println("Updating to List in Worker Group" + ant.id);
-    if (ants.get(ant.id) != null) {
+    if (ants.get(ant.id) != null)
+    {
       ants.get(ant.id).updateAnt(ant);
     }
   }
 
   void chooseAction()
   {
-    for (Ants ant : ants.values()) {
+    for (Ants ant : ants.values())
+    {
       if (!include.contains(ant.getAnt().id)) continue;
       ant.update();
     }
@@ -124,37 +129,29 @@ public class WorkerGroup
   }
 
 
+  /**
+   * @Himanshu
+   * FInds path to a goal and also return path so
+   * that the ants have goto and return path
+   */
   public void findPath()
   {
     if (debug) System.out.println("Finding Path ----------------------------------------------");
     start = new PathNode(spawnX, spawnY);
-    if (true) {
-      if (debug) System.out.println("Start: ------------" + start.getX() + " " + start.getY());
-      if (debug) System.out.println("Goal: ------------" + goal.getX() + " " + goal.getY());
-    }
     path = pathFinder.getPath(start, goal);
     ArrayList<PathNode> dont = new ArrayList<>();
     dont.addAll(path);
     dont.remove(start);
     dont.remove(goal);
     // required path to Retrun
-    if (dont.size() > 0) {
+    if (dont.size() > 0)
+    {
       returnPath = pathFinder.getPathSelective(dont.get(dont.size() - 1), start, dont);
-    } else {
+    } else
+    {
       returnPath = pathFinder.getPath(start, goal);
     }
 
-    if (debug) {
-      System.out.println("Start: ------------" + start.getX() + " " + start.getY());
-      System.out.println(path);
-      System.out.println("Goal: ------------" + goal.getX() + " " + goal.getY());
-
-      System.out.println("--------------------" + start.getX() + " " + start.getY());
-
-      System.out.println(returnPath);
-
-      System.out.println("Goal: ------------" + goal.getX() + " " + goal.getY());
-    }
   }
 
 

@@ -43,27 +43,32 @@ public class ExplorerAnts extends Ants
 
 
   /**
-   * @return Gets possible directions to move
    * @HImanshu
+   * @return Gets possible directions to move
+   *
    */
   public ArrayList<Direction> getPossibleDirections()
   {
     Direction[] temp = new Direction[7];
     ArrayList<Direction> toReturn = new ArrayList<>();
     temp[0] = Direction.getRightDir(dir);
-    for (int i = 1; i < 7; i++) {
+    for (int i = 1; i < 7; i++)
+    {
       temp[i] = Direction.getRightDir(temp[i - 1]);
     }
     int[] order = {1, 5, 2, 4, 6, 0, 3};
 
-    for (int i : order) {
+    for (int i : order)
+    {
       if (isPossible(temp[i])) toReturn.add(temp[i]);
     }
 
-    if (debug) {
+    if (debug)
+    {
       System.out.println();
       System.out.println("Possible Directions to move" + ant.gridX + "," + ant.gridY + "Direction " + dir.toString());
-      for (Direction dir : toReturn) {
+      for (Direction dir : toReturn)
+      {
         System.out.println(dir.toString());
       }
       System.out.println();
@@ -90,25 +95,33 @@ public class ExplorerAnts extends Ants
     int ymax = Math.min(1500 - 2, currentY + radius);
     int newPos = 0;
 
-    if (deltaX != 0) {
+
+    if (deltaX != 0)
+    {
       if (deltaX > 0) newPos = xmax;
       else newPos = xmin;
-      for (int i = ymin; i <= ymax; i++) {
+      for (int i = ymin; i <= ymax; i++)
+      {
         if (isSeen(newPos, i)) toReturn.add(new PathNode(newPos, i));
       }
     }
 
-    if (deltaY != 0) {
+    if (deltaY != 0)
+    {
+      if (debug) System.out.println("DeltaY is not 0");
       if (deltaY > 0) newPos = ymax;
       else newPos = ymin;
-      for (int i = xmin; i <= xmax; i++) {
+      for (int i = xmin; i <= xmax; i++)
+      {
         if (isSeen(i, newPos)) toReturn.add(new PathNode(i, newPos));
       }
 
     }
-    if (debug) {
+    if (debug)
+    {
       System.out.println("Unseen List for Current" + ant.gridX + "," + ant.gridY + "Direction " + nextDir.toString() + "new CoOrdinates" + currentX + " , " + currentY);
-      for (PathNode path : toReturn) {
+      for (PathNode path : toReturn)
+      {
         System.out.println(path.getX() + "," + path.getY());
       }
     }
@@ -117,7 +130,7 @@ public class ExplorerAnts extends Ants
 
   /**
    * @param node
-   * @return returns unseen list for a pathnode
+   * @return returns unseen list for a pathnode by comparing the visited nodes
    * @Himanshu
    */
   public ArrayList<PathNode> unSeenList(PathNode node)
@@ -131,21 +144,27 @@ public class ExplorerAnts extends Ants
     int ymin = Math.max(1, currentY - radius);
     int xmax = Math.min(2500 - 2, currentX + radius);
     int ymax = Math.min(1500 - 2, currentY + radius);
-    for (int i = ymin; i <= ymax; i += (ymax - ymin)) {
-      for (int j = xmin; j <= xmax; j++) {
+    for (int i = ymin; i <= ymax; i += (ymax - ymin))
+    {
+      for (int j = xmin; j <= xmax; j++)
+      {
         if (isSeen(j, i)) toReturn.add(new PathNode(j, i));
       }
     }
 
-    for (int i = xmin; i <= xmax; i += (xmax - xmin)) {
-      for (int j = ymin; j <= ymax; j++) {
+    for (int i = xmin; i <= xmax; i += (xmax - xmin))
+    {
+      for (int j = ymin; j <= ymax; j++)
+      {
         if (isSeen(i, j)) toReturn.add(new PathNode(i, j));
       }
     }
 
-    if (debug) {
+    if (debug)
+    {
       System.out.println("Unseen List for Current" + ant.gridX + "," + ant.gridY + "at Pathnode " + node.getX() + " , " + node.getY());
-      for (PathNode path : toReturn) {
+      for (PathNode path : toReturn)
+      {
         System.out.println(path.getX() + "," + path.getY());
       }
     }
@@ -153,15 +172,24 @@ public class ExplorerAnts extends Ants
     return toReturn;
   }
 
+  /**
+   *
+   * @param x
+   * @param y
+   * @return true or false depending upon is the node at x,y is already seen or not
+   */
   boolean isSeen(int x, int y)
   {
     PathNode temp = new PathNode(x, y);
     if (!pathFinder.nodeLegal(temp)) return false;
-    if (visited.containsKey(x)) {
-      if (!visited.get(x).containsKey(y)) {
+    if (visited.containsKey(x))
+    {
+      if (!visited.get(x).containsKey(y))
+      {
         return true;
       }
-    } else {
+    } else
+    {
       return true;
     }
     return false;
@@ -188,19 +216,24 @@ public class ExplorerAnts extends Ants
     int current = 0;
     int temp;
     ArrayList<Direction> possiblePath = getPossibleDirections();
-    for (Direction nextDir : possiblePath) {
+    for (Direction nextDir : possiblePath)
+    {
       temp = towardsNewPath(nextDir);
       if (debug) System.out.println("Moving towards" + nextDir.toString() + "has " + temp + " new locations");
-      if (temp > current) {
-        if (toReturn != null) {
+      if (temp > current)
+      {
+        if (toReturn != null)
+        {
           undiiscoveredNodes.add(getNextNode(toReturn));
           if (debug)
             System.out.println("Adding to Undiscovered list : " + toReturn + "with pathnode " + getNextNode(toReturn).getX() + " , " + getNextNode((toReturn)).getY());
         }
         toReturn = nextDir;
         current = temp;
-      } else {
-        if (temp != 0) {
+      } else
+      {
+        if (temp != 0)
+        {
           undiiscoveredNodes.add(getNextNode(nextDir));
 
           if (debug)
@@ -210,17 +243,20 @@ public class ExplorerAnts extends Ants
 
     }
 
-    if (toReturn == null) {
+    if (toReturn == null)
+    {
       if (debug)
-        System.out.println("Trapped between visited Nodes ----------------------------------------------------------");
-      if (undiiscoveredNodes.size() < 1) {
-        if (debug) System.out.println("No Undiscoverable Nodes ---------------Getting Random Direction");
+        System.out.println("Trapped between visited Nodes ");
+      if (undiiscoveredNodes.size() < 1)
+      {
+        if (debug) System.out.println("No Undiscoverable Nodes Getting Random Direction");
         return Direction.getRandomDir();
       }
       PathNode start = new PathNode(ant.gridX, ant.gridY);
       int last = undiiscoveredNodes.size() - 1;
       PathNode goal = undiiscoveredNodes.get(last);
-      while (unSeenList(goal).size() < 1) {
+      while (unSeenList(goal).size() < 1)
+      {
         undiiscoveredNodes.remove(last);
         if (undiiscoveredNodes.size() < 1) return Direction.getRandomDir();
         last = undiiscoveredNodes.size() - 1;
@@ -230,7 +266,7 @@ public class ExplorerAnts extends Ants
       undiiscoveredNodes.remove(last);
       pathStep = 1;
       if (debug)
-        System.out.println("Moving Towards----------------------------------------------------------" + start.getX() + "," + start.getY() + "to" + goal.getX() + "," + goal.getY());
+        System.out.println("Moving Towards" + start.getX() + "," + start.getY() + "to" + goal.getX() + "," + goal.getY());
       antBehavior = AntBehaviors.GOTO;
       return start.getDirectionTo(path.get(1));
     }
@@ -241,14 +277,6 @@ public class ExplorerAnts extends Ants
   }
 
 
-  PathNode getLastNode(AntData ant)
-  {
-    int x = ant.gridX + (ant.antType.getVisionRadius()) * dir.deltaX();
-    int y = ant.gridY + (ant.antType.getVisionRadius()) * dir.deltaY();
-    if (debug)
-      System.out.println("Current Node : " + ant.gridX + "," + ant.gridY + " Final values at the end " + x + "' " + y);
-    return new PathNode(x, y);
-  }
 
   PathNode getNextNode(Direction dir)
   {
@@ -294,7 +322,8 @@ public class ExplorerAnts extends Ants
    */
   void moveAnt(ArrayList<PathNode> path)
   {
-    if (path.size() < 1) {
+    if (path.size() < 1)
+    {
       ant.action.type = AntAction.AntActionType.NOOP;
       return;
     }
@@ -307,13 +336,15 @@ public class ExplorerAnts extends Ants
     if (debug)
       System.out.println("start " + ant.gridX + "," + ant.gridY + " Goal" + destination.getX() + " " + destination.getY());
     dir = antNode.getDirectionTo(destination);
-    if (dir == null) {
+    if (dir == null)
+    {
       if (debug) System.out.println("RETURNING NOOP");
       ant.action.type = AntAction.AntActionType.MOVE;
       ant.action.direction = Direction.getRandomDir();
       antBehavior = AntBehaviors.EXPLORE;
       pathStep++;
-    } else {
+    } else
+    {
       ant.action.type = AntAction.AntActionType.MOVE;
       ant.action.direction = dir;
     }
@@ -328,17 +359,22 @@ public class ExplorerAnts extends Ants
   public void update()
   {
     if (debug) System.out.println("Updating Ant with ID :" + ant.id + " Behaviour " + antBehavior);
-    switch (antBehavior) {
-      case TOSPAWN: {
-        if (ant.state == AntAction.AntState.UNDERGROUND) {
+    switch (antBehavior)
+    {
+      case TOSPAWN:
+      {
+        if (ant.state == AntAction.AntState.UNDERGROUND)
+        {
           ant.action.type = AntAction.AntActionType.EXIT_NEST;
           ant.action.x = spawnX;
           ant.action.y = spawnY;
         }
         break;
       }
-      case EXPLORE: {
-        if (!pathFinder.nodeLegal(getNextNode(dir))) {
+      case EXPLORE:
+      {
+        if (!pathFinder.nodeLegal(getNextNode(dir)))
+        {
           if (debug)
             System.out.print("Not possible to move ahead in " + dir.toString() + " at " + ant.gridX + "," + ant.gridY);
           dir = getRandomAdjacentDir();
@@ -349,7 +385,8 @@ public class ExplorerAnts extends Ants
         break;
       }
 
-      case CHOOSERANDOM: {
+      case CHOOSERANDOM:
+      {
         if (debug) System.out.println("Path reached and choosing Random dir to move");
         dir = getRandomAdjacentDir();
         ant.action.type = AntAction.AntActionType.MOVE;
@@ -357,9 +394,11 @@ public class ExplorerAnts extends Ants
         break;
       }
 
-      case PICKUPWATER: {
+      case PICKUPWATER:
+      {
         dir = pathFinder.getDirectionToWater(ant.gridX, ant.gridY);
-        if (dir == null) {
+        if (dir == null)
+        {
           antBehavior = previousBehaviour;
           return;
         }
@@ -369,8 +408,10 @@ public class ExplorerAnts extends Ants
         break;
       }
 
-      case GOTO: {
-        if (pathStep == path.size() || path.size() < 0 || path == null) {
+      case GOTO:
+      {
+        if (pathStep == path.size() || path.size() < 0 || path == null)
+        {
           if (debug) System.out.println("Path reached and choosing Random dir to move");
           dir = getRandomAdjacentDir();
           ant.action.type = AntAction.AntActionType.MOVE;
@@ -380,10 +421,13 @@ public class ExplorerAnts extends Ants
         } else moveAnt(path);
         break;
       }
-      case HEAL: {
+      case HEAL:
+      {
         ant.action.type = AntAction.AntActionType.HEAL;
-        if (!startedToheal) {
-          if (ant.health > 0) {
+        if (!startedToheal)
+        {
+          if (ant.health > 0)
+          {
             healUnits = (ant.antType.getMaxHealth() / ant.health) * 2;
             startedToheal = true;
           }
@@ -401,20 +445,26 @@ public class ExplorerAnts extends Ants
   public void updateAnt(AntData ant)
   {
     if (debug) System.out.println("Updating Ant in ExplorerGroup " + ant.id);
-    if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
-      if (this.ant.gridX == ant.gridX && this.ant.gridY == ant.gridY) {
+    if (ant.state == AntAction.AntState.OUT_AND_ABOUT)
+    {
+      if (this.ant.gridX == ant.gridX && this.ant.gridY == ant.gridY)
+      {
         moved = false;
         stuck++;
-        if (stuck > 20) {
+        if (stuck > 20)
+        {
           antBehavior = AntBehaviors.EXPLORE;
           dir = Direction.getRandomDir();
           stuck = 0;
         }
-      } else {
+      } else
+      {
         moved = true;
         stuck = 0;
-        switch (antBehavior) {
-          case GOTO: {
+        switch (antBehavior)
+        {
+          case GOTO:
+          {
             if (debug) System.out.println("Updating AntPathStep");
             pathStep++;
             break;
@@ -438,32 +488,43 @@ public class ExplorerAnts extends Ants
   {
     if (debug) System.out.println("Current Ant behavior: " + antBehavior + " With PathStep " + pathStep);
 
-    switch (antBehavior) {
-      case TOSPAWN: {
-        if (ant.state == AntAction.AntState.OUT_AND_ABOUT) {
-          if (path != null || path.size() > 0) {
+    switch (antBehavior)
+    {
+      case TOSPAWN:
+      {
+        if (ant.state == AntAction.AntState.OUT_AND_ABOUT)
+        {
+          if (path != null || path.size() > 0)
+          {
             antBehavior = AntBehaviors.GOTO;
             pathStep = 1;
             return;
-          } else {
+          } else
+          {
             antBehavior = AntBehaviors.EXPLORE;
           }
 
         }
         break;
       }
-      case PICKUPWATER: {
-        if (ant.health < 10) {
+      case PICKUPWATER:
+      {
+        if (ant.health < 10)
+        {
           antBehavior = AntBehaviors.HEAL;
-        } else {
+        } else
+        {
           antBehavior = previousBehaviour;
         }
         break;
       }
-      case HEAL: {
-        if (healUnits > 1 && ant.health < ant.antType.getMaxHealth() - 3) {
+      case HEAL:
+      {
+        if (healUnits > 1 && ant.health < ant.antType.getMaxHealth() - 3)
+        {
           healUnits--;
-        } else {
+        } else
+        {
           antBehavior = previousBehaviour;
           healUnits = 0;
           startedToheal = false;
@@ -491,17 +552,26 @@ public class ExplorerAnts extends Ants
 
   }
 
+  /**
+   * @Himanshu
+   * @return
+   *
+   * checks to see if the conditions are good to heal or pickup water
+   */
   boolean checkCriticalConditions()
   {
     if (antBehavior == AntBehaviors.PICKUPWATER || antBehavior == AntBehaviors.HEAL) return false;
-    if (ant.health < 20 && ant.carryUnits > 0) {
+    if (ant.health < 20 && ant.carryUnits > 0)
+    {
       previousBehaviour = antBehavior;
       antBehavior = AntBehaviors.HEAL;
       return true;
     }
     if (checkForWater < 50) return false;
-    if (pathFinder.getDirectionToWater(ant.gridX, ant.gridY) != null) {
-      if (ant.carryUnits < 3) {
+    if (pathFinder.getDirectionToWater(ant.gridX, ant.gridY) != null)
+    {
+      if (ant.carryUnits < 3)
+      {
         previousBehaviour = antBehavior;
         antBehavior = AntBehaviors.PICKUPWATER;
         checkForWater = 0;
@@ -525,14 +595,19 @@ public class ExplorerAnts extends Ants
     int xmax = Math.min(2500 - 2, x + radius);
     int ymax = Math.min(1500 - 2, y + radius);
 
-    for (int i = ymin; i <= ymax; i++) {
-      for (int j = xmin; j <= xmax; j++) {
-        if (visited.containsKey(j)) {
-          if (!visited.get(j).containsKey(i)) {
+    for (int i = ymin; i <= ymax; i++)
+    {
+      for (int j = xmin; j <= xmax; j++)
+      {
+        if (visited.containsKey(j))
+        {
+          if (!visited.get(j).containsKey(i))
+          {
             visited.get(j).put(i, 0);
             if (debug) System.out.println("New Y visited" + j + " , " + i);
           }
-        } else {
+        } else
+        {
           visited.put(j, new HashMap<>());
           visited.get(j).put(ant.gridY, 0);
           if (debug) System.out.println("New X visited" + j + " , " + i);
