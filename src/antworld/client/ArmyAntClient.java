@@ -69,6 +69,10 @@ public class ArmyAntClient
     private HashMap<Integer,WorkerGroup> assigendAnts= new HashMap<>(); //here integer is the ID number of ant
     private HashMap <Integer,WorkerGroup> unAssigendAnts= new HashMap<>(); // here integer is the index in the array
 
+    private HashMap<Integer,WorkerGroup> assignedWorkerGroups = new HashMap<>();
+    private HashMap<Integer,FoodData> clientFoodList = new HashMap<>();
+
+
     private ArrayList<WorkerGroup> groups = new ArrayList<>();
     private int birthCount; //number of ants being generated at each turn
 
@@ -106,6 +110,7 @@ public class ArmyAntClient
         isConnected = openConnection(host, reconnect);
         if (!isConnected) System.exit(0);
 
+
         mainGameLoop();
         closeAll();
     }
@@ -116,6 +121,8 @@ public class ArmyAntClient
                 716,2155,1389,2419,1123,2475,873,2419,1123,2399,1279,2177,1363,2276,1273,1531,1165,1363,1049,822,776,644,1321,
                 309,1125,263,736,392,392,715,282,1199,116,1970,287,2232,126,2400,760,2157,1189,2403,1124,1818,1256,840,1316));
     }
+
+
 
     private boolean openConnection(String host, boolean reconnect)
     {
@@ -166,17 +173,59 @@ public class ArmyAntClient
 
     }
 
-    void createExplorers(PacketToServer packetOut){
-        initializeNodesTosearch();
-        for (int i = 0; i <2; i+=2){
-            ExplorerAnts explorer = new ExplorerAnts(pathFinder,centerX,centerY,myTeam);
-            addAnt(explorer, packetOut);
-            explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
+    void updateReceivedData(PacketToClient packetToClient, PacketToServer packetOut){
+        if (packetToClient.foodList!= null && packetToClient.foodList.size() > 0){
+            updateFoodSites(packetToClient.foodList, packetOut);
+        }
+    }
+
+    void updateFoodSites(ArrayList<FoodData> foodList, PacketToServer packetOut){
+        for (FoodData food : foodList){
+            if (!isContainedinFoodList(food)){
+                addFoodData(food, packetOut);
+            }
+            else
+            {
+                updateFoodData (food);
+            }
         }
 
-        WorkerGroup group = new WorkerGroup(myTeam,pathFinder,centerX+10, centerY);
-        addGroup(group,packetOut);
+    }
 
+    void addFoodData(FoodData food, PacketToServer packetOut){
+        if (food.quantity > 3){
+            WorkerGroup group = new WorkerGroup(myTeam,pathFinder,centerX+10, centerY);
+            group.setGoal(food.gridX, food.gridY);
+            addGroup(group,packetOut);
+            clientFoodList.put(getDistance(food),food);
+            assignedWorkerGroups.put((getDistance(food)),group);
+        }
+    }
+
+    void updateFoodData (FoodData food){
+        clientFoodList.put(getDistance(food),food);
+    }
+
+    void createExplorers(PacketToServer packetOut){
+        initializeNodesTosearch();
+        for (int i = 0; i <10; i+=2){
+            ExplorerAnts explorer = new ExplorerAnts(pathFinder,centerX,centerY,myTeam);
+            addAnt(explorer, packetOut);
+            //explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
+        }
+
+    }
+
+    boolean isContainedinFoodList(FoodData food){
+        int foodDistance = getDistance(food);
+        for (Integer distance: clientFoodList.keySet()){
+            if (distance == foodDistance) return true;
+        }
+        return false;
+    }
+
+    int getDistance (FoodData food){
+        return  (food.gridX^2 + food.gridY^2);
     }
 
     void addAnt (Ants ants, PacketToServer packetOut){
@@ -196,7 +245,6 @@ public class ArmyAntClient
 
     void addGroup(WorkerGroup group, PacketToServer packetOut){
         groups.add(group);
-        group.setGoal(840, 1316);
         for (Ants ants : group.getAntsList() ){
             addAnt(ants,group,packetOut);
         }
@@ -345,6 +393,7 @@ public class ArmyAntClient
 
 
             PacketToServer packetOut = new PacketToServer(myTeam);
+
             updateAntsfromServer(packetIn);
            chooseActionsOfAllAnts(packetIn,packetOut);
 
@@ -353,6 +402,7 @@ public class ArmyAntClient
                 createExplorers(packetOut);
                 initial = false;
             }
+            updateReceivedData(packetIn,packetOut);
             send(packetOut);
         }
     }
