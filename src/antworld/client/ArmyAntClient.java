@@ -208,10 +208,10 @@ public class ArmyAntClient
 
     void createExplorers(PacketToServer packetOut){
         initializeNodesTosearch();
-        for (int i = 0; i <10; i+=2){
+        for (int i = 0; i <nodesTosearch.size(); i+=2){
             ExplorerAnts explorer = new ExplorerAnts(pathFinder,centerX,centerY,myTeam);
             addAnt(explorer, packetOut);
-            //explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
+            explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i+1));
         }
 
     }
@@ -385,10 +385,10 @@ public class ArmyAntClient
             if (myNestName == null) setupNest(packetIn);
             if (myNestName != packetIn.myNest)
             {
-                System.err.println("ClientRandomWalk: !!!!ERROR!!!! " + myNestName);
+                System.err.println("Army: !!!!ERROR!!!! " + myNestName);
             }
 
-            if (DEBUG) System.out.println("ClientRandomWalk: chooseActions: " + myNestName);
+            if (DEBUG) System.out.println("Army: chooseActions: " + myNestName);
 
 
 
@@ -412,7 +412,7 @@ public class ArmyAntClient
     {
         try
         {
-            System.out.println("ClientRandomWalk: Sending>>>>>>>: " + packetOut);
+            System.out.println("Army: Sending>>>>>>>: " + packetOut);
             outputStream.writeObject(packetOut);
             outputStream.flush();
             outputStream.reset();
@@ -420,7 +420,7 @@ public class ArmyAntClient
 
         catch (IOException e)
         {
-            System.err.println("ClientRandomWalk***ERROR***: client write failed");
+            System.err.println("Army***ERROR***: client write failed");
             e.printStackTrace();
             System.exit(0);
         }

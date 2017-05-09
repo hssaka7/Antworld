@@ -68,7 +68,7 @@ class PathNode
   @Override
   public String toString()
   {
-    return x +"," + y;
+    return x +"," + y +'|';
   }
 
   //Below are the standard setters and getters for this structure

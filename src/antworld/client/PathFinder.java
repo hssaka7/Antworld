@@ -4,33 +4,41 @@ import antworld.common.*;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+import static antworld.common.Constants.random;
 
 /**
  * Created by kleyba on 4/27/17.
  * The PathFinder class is used to generate paths for AntWorld
  */
-public class PathFinder {
+public class PathFinder
+{
   //List of ants to check nodes
   private ArrayList<AntData> antList = new ArrayList<>();
+  private ArrayList<FoodData> foodList = new ArrayList<FoodData>();
   //Map Fields
   private BufferedImage map;
   private int mapWidth;
   private int mapHeight;
 
- ////Initial Nodes and Paths Fields
- //private ArrayList<PathNode> initialNodes = new ArrayList<>();
- //private ArrayList<PathNode>[] initialPaths;
+  ////Initial Nodes and Paths Fields
+  //private ArrayList<PathNode> initialNodes = new ArrayList<>();
+  //private ArrayList<PathNode>[] initialPaths;
 
   private ArrayList<PathNode> emptyList = new ArrayList<>();
 
   //PathNodes to exclude
   private ArrayList<PathNode> exludeList = new ArrayList<>();
+  private ArrayList<AntData> enemyList;
 
   /**
    * @param map The BufferedImage representing the AntWorld Map
    * @KirtusL PathFinder constructor
    */
-  public PathFinder(BufferedImage map) {
+  public PathFinder(BufferedImage map)
+  {
     this.map = map;
     mapWidth = map.getWidth();
     mapHeight = map.getHeight();
@@ -69,45 +77,45 @@ public class PathFinder {
    */
   public ArrayList<PathNode> getPath(PathNode start, PathNode goal) {
 //
-   // System.out.println("Getting Path from: " + start + " to " + goal);
+    // System.out.println("Getting Path from: " + start + " to " + goal);
 //
-   // PathNode closestInitialNodeToStart = findClosestInitialNode(start); //The initial node closest to the start of the path
-   // PathNode closestInitialNodeToGoal = findClosestInitialNode(goal); //The initial node closest to the goal of the path
+    // PathNode closestInitialNodeToStart = findClosestInitialNode(start); //The initial node closest to the start of the path
+    // PathNode closestInitialNodeToGoal = findClosestInitialNode(goal); //The initial node closest to the goal of the path
 //
-   // System.out.println("Found initial nodes: " + closestInitialNodeToStart + ", " + closestInitialNodeToGoal);
+    // System.out.println("Found initial nodes: " + closestInitialNodeToStart + ", " + closestInitialNodeToGoal);
 //
-   // ArrayList<PathNode> pathStart = emptyList;
-   // ArrayList<PathNode> pathFinal = emptyList;
-   // ArrayList<PathNode> pathMiddle = emptyList;
-   // if (!closestInitialNodeToGoal.equals(closestInitialNodeToStart)) //Check if we need to use nodes
-   // {
+    // ArrayList<PathNode> pathStart = emptyList;
+    // ArrayList<PathNode> pathFinal = emptyList;
+    // ArrayList<PathNode> pathMiddle = emptyList;
+    // if (!closestInitialNodeToGoal.equals(closestInitialNodeToStart)) //Check if we need to use nodes
+    // {
 //
-   //   pathStart = generatePath(start, closestInitialNodeToStart);
-   //   pathFinal = generatePath(closestInitialNodeToGoal, goal);
-   //   pathMiddle = calculateTraversalPath(closestInitialNodeToStart, closestInitialNodeToGoal);
+    //   pathStart = generatePath(start, closestInitialNodeToStart);
+    //   pathFinal = generatePath(closestInitialNodeToGoal, goal);
+    //   pathMiddle = calculateTraversalPath(closestInitialNodeToStart, closestInitialNodeToGoal);
 //
-   //   if (pathStart.size() > 0) {
-   //     System.out.println("Start found: " + pathStart.get(0) + " to: " + pathStart.get(pathStart.size() - 1));
-   //   }
-   //   if (pathFinal.size() > 0) {
-   //     System.out.println("final found" + pathFinal.get(0) + " to: " + pathFinal.get(pathFinal.size() - 1));
-   //   }
-   //   if (pathMiddle.size() > 0) {
-   //     System.out.println("Middle found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
-   //   }
-   // } else {
-   //   pathMiddle = generatePath(start, goal);
-   //   if (pathMiddle.size() > 0)
-   //     System.out.println("Short Path found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
-   // }
-//
-//
-   // ArrayList<PathNode> path = new ArrayList<>();
+    //   if (pathStart.size() > 0) {
+    //     System.out.println("Start found: " + pathStart.get(0) + " to: " + pathStart.get(pathStart.size() - 1));
+    //   }
+    //   if (pathFinal.size() > 0) {
+    //     System.out.println("final found" + pathFinal.get(0) + " to: " + pathFinal.get(pathFinal.size() - 1));
+    //   }
+    //   if (pathMiddle.size() > 0) {
+    //     System.out.println("Middle found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
+    //   }
+    // } else {
+    //   pathMiddle = generatePath(start, goal);
+    //   if (pathMiddle.size() > 0)
+    //     System.out.println("Short Path found" + pathMiddle.get(0) + " to: " + pathMiddle.get(pathMiddle.size() - 1));
+    // }
 //
 //
-   // path.addAll(pathStart);
-   // path.addAll(pathMiddle);
-   // path.addAll(pathFinal);
+    // ArrayList<PathNode> path = new ArrayList<>();
+//
+//
+    // path.addAll(pathStart);
+    // path.addAll(pathMiddle);
+    // path.addAll(pathFinal);
 
     return generatePath(start, goal);
   }
@@ -118,7 +126,17 @@ public class PathFinder {
    * @return An ArrayList of all the paths
    * @KirtusL A* pathfinding implementation
    */
-  private ArrayList<PathNode> generatePath(PathNode first, PathNode last) {
+  private ArrayList<PathNode> generatePath(PathNode first, PathNode last)
+  {
+
+    if(!nodeLegal(last))
+    {
+      return emptyList;
+    }
+
+    int iterations = 0;
+    int maxIterations = 30000;
+
     /**
      * Essential A* Fields
      */
@@ -133,25 +151,37 @@ public class PathFinder {
 
     PathNode current;
 
-    while (frontier.size() > 0) {
+    while (frontier.size() > 0)
+    {
+      iterations++;
+      if(iterations >= maxIterations)
+      {
+        return emptyList; //Too many iterations
+      }
+      System.out.println(iterations);
       current = getLowestF(frontier);
-      if (current.equals(last)) {
+      if (current.equals(last))
+      {
         return constructPath(current, first);
       }
       frontier.remove(current);
       removeFrom(current, frontierArray);
       addTo(current, visitedArray);
       adjacencyList = calcAdjacencies(current);
-      for (PathNode adjNode : adjacencyList) {
+      for (PathNode adjNode : adjacencyList)
+      {
         double tempG = current.getG() + distSquared(current, adjNode);
-        if (!checkArray(adjNode, visitedArray)) {
-          if (!checkArray(adjNode, frontierArray)) {
+        if (!checkArray(adjNode, visitedArray))
+        {
+          if (!checkArray(adjNode, frontierArray))
+          {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
             frontier.add(adjNode);
             addTo(adjNode, frontierArray);
-          } else if (tempG < adjNode.getG()) {
+          } else if (tempG < adjNode.getG())
+          {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
@@ -179,15 +209,18 @@ public class PathFinder {
    * @param node
    * @return
    */
-  private ArrayList<PathNode> calcAdjacencies(PathNode node) {
+  private ArrayList<PathNode> calcAdjacencies(PathNode node)
+  {
     ArrayList<PathNode> adjTiles = new ArrayList<PathNode>();
     int x = node.getX();
     int y = node.getY();
-    for (Direction dir : Direction.values()) {
+    for (Direction dir : Direction.values())
+    {
       int tempX = x + dir.deltaX();
       int tempY = y + dir.deltaY();
       PathNode tempNode = new PathNode(tempX, tempY);
-      if (nodeLegal(tempNode)) {
+      if (nodeLegal(tempNode))
+      {
         adjTiles.add(tempNode);
       }
     }
@@ -220,12 +253,67 @@ public class PathFinder {
     {
       return false;
     }
+    if (foodHere(node))
+    {
+      return false;
+    }
     return true;
+  }
+
+  private boolean foodHere(PathNode node)
+  {
+    for(FoodData fd: foodList)
+    {
+      if(fd.gridX == node.getX() && fd.gridY == node.getY())
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean antHere(PathNode node)
   {
     for(AntData ant: antList)
+    {
+      if(ant.gridX == node.getX() && ant.gridY == node.getY())
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+
+  public PathNode foodAdjacent(PathNode node)
+  {
+    for(Direction testDir: Direction.values())
+    {
+      PathNode testNode = new PathNode(node.getX() + testDir.deltaX(), node.getY() + testDir.deltaY());
+      if(foodHere(testNode))
+      {
+        return testNode;
+      }
+    }
+    return null;
+  }
+
+  public PathNode enemyAdjacent(PathNode node)
+  {
+    for(Direction testDir: Direction.values())
+    {
+      PathNode testNode = new PathNode(node.getX() + testDir.deltaX(), node.getY() + testDir.deltaY());
+      if(enemyHere(testNode))
+      {
+        return testNode;
+      }
+    }
+    return null;
+  }
+
+  private boolean enemyHere(PathNode node)
+  {
+    for(AntData ant: enemyList)
     {
       if(ant.gridX == node.getX() && ant.gridY == node.getY())
       {
@@ -317,15 +405,6 @@ public class PathFinder {
     }
     return path;
   }
-
-  /**
-   * @KirtusL
-   * This method returns the nearest initial node to the node passed in
-   * @param node
-   * The node that you wish to find the nearest node to
-   * @return
-   * The nearest initial node
-   */
   //private PathNode findClosestInitialNode(PathNode node)
   //{
   //  PathNode nearest = initialNodes.get(0);
@@ -339,15 +418,6 @@ public class PathFinder {
   //  return nearest;
   //}
 
-  /**
-   * @KirtusL
-   * This method returns the path between two initial nodes
-   * @param nodeOne
-   * The first initial Node
-   * @param nodeTwo
-   * The final initial Node
-   * @return
-   */
   //private ArrayList<PathNode> calculateTraversalPath(PathNode nodeOne, PathNode nodeTwo)
   //{
   //  for(ArrayList<PathNode> path: initialPaths)
@@ -361,11 +431,17 @@ public class PathFinder {
   //}
 
 
+  /**
+   * @KirtusL
+   * @param start
+   * @param goal
+   * @param exludeList
+   * @return
+   * The path from start to goal ignoring nodes on excludeList
+   */
   public ArrayList<PathNode> getPathSelective(PathNode start, PathNode goal, ArrayList<PathNode> exludeList)
   {
-    this.exludeList.addAll(exludeList);
-    this.exludeList.remove(start);
-    this.exludeList.remove(goal);
+    this.exludeList = exludeList;
     ArrayList<PathNode> path = generatePath(start, goal);
     this.exludeList = emptyList;
     return path;
@@ -382,7 +458,7 @@ public class PathFinder {
    * @return
    * The distance squared between the nodes
    */
-  private double distSquared(PathNode nodeOne, PathNode nodeTwo)
+  public double distSquared(PathNode nodeOne, PathNode nodeTwo)
   {
     double dx = nodeOne.getX() - nodeTwo.getX();
     double dy = nodeOne.getY() - nodeTwo.getY();
@@ -451,4 +527,27 @@ public class PathFinder {
     return null;
   }
 
+  public void setFoodList(ArrayList<FoodData> foodList)
+  {
+    this.foodList = foodList;
+  }
+  public void setEnemyList(ArrayList<AntData> enemyList)
+  {
+    this.enemyList = enemyList;
+  }
+
+  public PathNode getRandomExplorerNode(PathNode start)
+  {
+    PathNode attempt;
+    int x = Direction.getRandomDir().deltaX()*(start.getX() + 10 + random.nextInt(20));
+    int y = Direction.getRandomDir().deltaY()*(start.getY() + 10 + random.nextInt(20));
+    attempt = new PathNode(x, y);
+    while(!nodeLegal(attempt))
+    {
+      x = Direction.getRandomDir().deltaX()*(start.getX() + 10 + random.nextInt(20));
+      y = Direction.getRandomDir().deltaY()*(start.getY() + 10 + random.nextInt(20));
+      attempt = new PathNode(x,y);
+    }
+    return attempt;
+  }
 }
