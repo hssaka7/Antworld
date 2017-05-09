@@ -22,48 +22,42 @@ import antworld.common.AntAction.AntActionType;
 
 /**
  * This is a very simple example client that implements the following protocol:
- *   <ol>
- *     <li>The server must already be running (either on a networked or local machine) and
- *     listening on port 5555 for a client socket connection.
- *     The default host for the server is foodgame.cs.unm.edu on port 5555.</li>
- *     <li>The client opens a socket to the server.</li>
- *     <li>The client then sends a PacketToServer with PacketToServer.myTeam
- *     set to the client's team enum.<br>
- *
- *       <ul>
- *         <li>If this is the client's first connection this game: The client may spawn its
- *         initial ants in this first message or may choose to wait for a future turn to
- *         spawn the ants.</li>
- *         <li>If the client is reconnecting, then the client should set myAntList = null.
- *         This will cause the next message from the server to
- *         include a full list of the client's ants (including ants that are underground,
- *         busy, and noop).</li>
- *       </ul>
- *    </li>
- *
- *     <li>
- *       The server will then send a populated PacketToClient message to the client.
- *     </li>
- *     <li>
- *       Each tick of server, the server will send a PacketToClient message to each client.
- *       After receiving the server update, the client should choose an action for each of its
- *       ants and send a PacketToServer message back to the server.
- *     </li>
- *   </ol>
+ * <ol>
+ * <li>The server must already be running (either on a networked or local machine) and
+ * listening on port 5555 for a client socket connection.
+ * The default host for the server is foodgame.cs.unm.edu on port 5555.</li>
+ * <li>The client opens a socket to the server.</li>
+ * <li>The client then sends a PacketToServer with PacketToServer.myTeam
+ * set to the client's team enum.<br>
+ * <p>
+ * <ul>
+ * <li>If this is the client's first connection this game: The client may spawn its
+ * initial ants in this first message or may choose to wait for a future turn to
+ * spawn the ants.</li>
+ * <li>If the client is reconnecting, then the client should set myAntList = null.
+ * This will cause the next message from the server to
+ * include a full list of the client's ants (including ants that are underground,
+ * busy, and noop).</li>
+ * </ul>
+ * </li>
+ * <p>
+ * <li>
+ * The server will then send a populated PacketToClient message to the client.
+ * </li>
+ * <li>
+ * Each tick of server, the server will send a PacketToClient message to each client.
+ * After receiving the server update, the client should choose an action for each of its
+ * ants and send a PacketToServer message back to the server.
+ * </li>
+ * </ol>
  */
-
-
-
-
-
-
 
 
 public class ClientRandomWalk
 {
   private static final boolean DEBUG = true;
   private final TeamNameEnum myTeam;
-  private ObjectInputStream  inputStream = null;
+  private ObjectInputStream inputStream = null;
   private ObjectOutputStream outputStream = null;
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
@@ -72,17 +66,17 @@ public class ClientRandomWalk
 
 
   /**
-  * A random number generator is created in Constants. Use it.
-  * Do not create a new generator every time you want a random number nor
-  * even in every class were you want a generator.
-  */
+   * A random number generator is created in Constants. Use it.
+   * Do not create a new generator every time you want a random number nor
+   * even in every class were you want a generator.
+   */
   private static Random random = Constants.random;
 
 
   public ClientRandomWalk(String host, TeamNameEnum team, boolean reconnect)
   {
     myTeam = team;
-    System.out.println("Starting " + team +" on " + host + " reconnect = " + reconnect);
+    System.out.println("Starting " + team + " on " + host + " reconnect = " + reconnect);
 
     isConnected = openConnection(host, reconnect);
     if (!isConnected) System.exit(0);
@@ -93,32 +87,24 @@ public class ClientRandomWalk
 
   private boolean openConnection(String host, boolean reconnect)
   {
-    try
-    {
+    try {
       clientSocket = new Socket(host, Constants.PORT);
-    }
-    catch (UnknownHostException e)
-    {
+    } catch (UnknownHostException e) {
       System.err.println("ClientRandomWalk Error: Unknown Host " + host);
       e.printStackTrace();
       return false;
-    }
-    catch (IOException e)
-    {
+    } catch (IOException e) {
       System.err.println("ClientRandomWalk Error: Could not open connection to " + host
-        + " on port " + Constants.PORT);
+      + " on port " + Constants.PORT);
       e.printStackTrace();
       return false;
     }
 
-    try
-    {
+    try {
       outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
       inputStream = new ObjectInputStream(clientSocket.getInputStream());
 
-    }
-    catch (IOException e)
-    {
+    } catch (IOException e) {
       System.err.println("ClientRandomWalk Error: Could not open i/o streams");
       e.printStackTrace();
       return false;
@@ -127,12 +113,10 @@ public class ClientRandomWalk
     PacketToServer packetOut = new PacketToServer(myTeam);
 
     if (reconnect) packetOut.myAntList = null;
-    else
-    {
+    else {
       //Spawn ants of whatever objType you want
       int numAnts = 30;//Constants.INITIAL_FOOD_UNITS / AntType.TOTAL_FOOD_UNITS_TO_SPAWN;
-      for (int i=0; i<numAnts; i++)
-      {
+      for (int i = 0; i < numAnts; i++) {
         AntType type = AntType.values()[random.nextInt(AntType.SIZE)];
         packetOut.myAntList.add(new AntData(type, myTeam)); //default action is BIRTH.
       }
@@ -146,14 +130,11 @@ public class ClientRandomWalk
   {
     System.out.println("ClientRandomWalk.closeAll()");
     {
-      try
-      {
+      try {
         if (outputStream != null) outputStream.close();
         if (inputStream != null) inputStream.close();
         clientSocket.close();
-      }
-      catch (IOException e)
-      {
+      } catch (IOException e) {
         System.err.println("ClientRandomWalk Error: Could not close");
         e.printStackTrace();
       }
@@ -178,12 +159,12 @@ public class ClientRandomWalk
    * This simple example client runs in a single thread. <br>
    * The mainGameLoop() has the following structure:<br>
    * <ol>
-   *   <li>Start a blocking listen for message from server.</li>
-   *   <li>When server message is received, if a nest has not yet been set up,
-   *   then setup the nest.</li>
-   *   <li> Assign actions to all ants</li>
-   *   <li> Send ant actions to server.</li>
-   *   <li> Loop back to step 1.</li>
+   * <li>Start a blocking listen for message from server.</li>
+   * <li>When server message is received, if a nest has not yet been set up,
+   * then setup the nest.</li>
+   * <li> Assign actions to all ants</li>
+   * <li> Send ant actions to server.</li>
+   * <li> Loop back to step 1.</li>
    * </ol>
    * This NOT a "tight loop" because the blocking socket read
    * will not return until the server sends the next message. Thus, this loop
@@ -191,40 +172,32 @@ public class ClientRandomWalk
    */
   public void mainGameLoop()
   {
-    while (true)
-    {
+    while (true) {
       PacketToClient packetIn = null;
-      try
-      {
+      try {
         if (DEBUG) System.out.println("ClientRandomWalk: listening to socket....");
         packetIn = (PacketToClient) inputStream.readObject();
-        if (DEBUG) System.out.println("ClientRandomWalk: received <<<<<<<<<"+inputStream.available()+"<...\n" + packetIn);
+        if (DEBUG)
+          System.out.println("ClientRandomWalk: received <<<<<<<<<" + inputStream.available() + "<...\n" + packetIn);
 
-        if (packetIn.myNest == null)
-        {
+        if (packetIn.myNest == null) {
           System.err.println("ClientRandomWalk***ERROR***: Server returned NULL nest");
           System.exit(0);
         }
-      }
-      catch (IOException e)
-      {
+      } catch (IOException e) {
         System.err.println("ClientRandomWalk***ERROR***: client read failed");
         e.printStackTrace();
         System.exit(0);
 
-      }
-      catch (ClassNotFoundException e)
-      {
+      } catch (ClassNotFoundException e) {
         System.err.println("ServerToClientConnection***ERROR***: client sent incorrect common format");
         e.printStackTrace();
         System.exit(0);
       }
 
 
-
       if (myNestName == null) setupNest(packetIn);
-      if (myNestName != packetIn.myNest)
-      {
+      if (myNestName != packetIn.myNest) {
         System.err.println("ClientRandomWalk: !!!!ERROR!!!! " + myNestName);
       }
 
@@ -238,16 +211,12 @@ public class ClientRandomWalk
 
   private void send(PacketToServer packetOut)
   {
-    try
-    {
+    try {
       System.out.println("ClientRandomWalk: Sending>>>>>>>: " + packetOut);
       outputStream.writeObject(packetOut);
       outputStream.flush();
       outputStream.reset();
-    }
-
-    catch (IOException e)
-    {
+    } catch (IOException e) {
       System.err.println("ClientRandomWalk***ERROR***: client write failed");
       e.printStackTrace();
       System.exit(0);
@@ -258,19 +227,15 @@ public class ClientRandomWalk
   private PacketToServer chooseActionsOfAllAnts(PacketToClient packetIn)
   {
     PacketToServer packetOut = new PacketToServer(myTeam);
-    for (AntData ant : packetIn.myAntList)
-    {
+    for (AntData ant : packetIn.myAntList) {
       AntAction action = chooseAction(packetIn, ant);
-      if (action.type != AntActionType.NOOP)
-      {
-         ant.action = action;
-         packetOut.myAntList.add(ant);
+      if (action.type != AntActionType.NOOP) {
+        ant.action = action;
+        packetOut.myAntList.add(ant);
       }
     }
     return packetOut;
   }
-
-
 
 
   //=============================================================================
@@ -280,11 +245,10 @@ public class ClientRandomWalk
   //=============================================================================
   private boolean exitNest(AntData ant, AntAction action)
   {
-    if (ant.state == AntState.UNDERGROUND)
-    {
+    if (ant.state == AntState.UNDERGROUND) {
       action.type = AntActionType.EXIT_NEST;
-      action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
-      action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
+      action.x = centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1));
+      action.y = centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1));
       return true;
     }
     return false;
@@ -339,8 +303,7 @@ public class ClientRandomWalk
   {
     AntAction action = new AntAction(AntActionType.NOOP);
 
-    if (ant.action.type == AntActionType.BUSY)
-    {
+    if (ant.action.type == AntActionType.BUSY) {
       //TODO: Now that the server has told you this ant is BUSY,
       //   The server will stop including it in updates until its state changes
       //   from BUSY to NOOP. At that point, the ant will have wasted a turn in NOOP
@@ -374,9 +337,9 @@ public class ClientRandomWalk
 
   private static String usage()
   {
-    return "Usage:\n    [-h hostname] [-t teamname] [-r]\n\n"+
-      "Each argument group is optional and can be in any order.\n" +
-      "-r specifies that the client is reconnecting.";
+    return "Usage:\n    [-h hostname] [-t teamname] [-r]\n\n" +
+    "Each argument group is optional and can be in any order.\n" +
+    "-r specifies that the client is reconnecting.";
   }
 
 
@@ -387,12 +350,12 @@ public class ClientRandomWalk
   {
     String serverHost = "localhost";
     boolean reconnection = false;
-    if (args.length > 0) serverHost = args[args.length -1];
+    if (args.length > 0) serverHost = args[args.length - 1];
 
     //TeamNameEnum team = TeamNameEnum.RandomWalkers;
     TeamNameEnum team = TeamNameEnum.SimpleSolid_3;
-    if (args.length > 1)
-    { team = TeamNameEnum.getTeamByString(args[0]);
+    if (args.length > 1) {
+      team = TeamNameEnum.getTeamByString(args[0]);
     }
 
     new ClientRandomWalk(serverHost, team, reconnection);

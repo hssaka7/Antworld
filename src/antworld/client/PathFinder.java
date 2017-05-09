@@ -1,13 +1,10 @@
 package antworld.client;
 
-import antworld.common.*;
+import antworld.common.AntData;
+import antworld.common.Direction;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-
-import static antworld.common.Constants.random;
 
 /**
  * Created by kleyba on 4/27/17.
@@ -17,7 +14,6 @@ public class PathFinder
 {
   //List of ants to check nodes
   private ArrayList<AntData> antList = new ArrayList<>();
-  private ArrayList<FoodData> foodList = new ArrayList<FoodData>();
   //Map Fields
   private BufferedImage map;
   private int mapWidth;
@@ -31,7 +27,6 @@ public class PathFinder
 
   //PathNodes to exclude
   private ArrayList<PathNode> exludeList = new ArrayList<>();
-  private ArrayList<AntData> enemyList;
 
   /**
    * @param map The BufferedImage representing the AntWorld Map
@@ -69,13 +64,15 @@ public class PathFinder
   //  }
   //}
 //
+
   /**
    * @param start The start node
    * @param goal  The goal node
    * @return The path from start to goal, composed of a combination of prebuilt A* paths and live calculated paths
    * @KirtusL This method returns the final calculated path
    */
-  public ArrayList<PathNode> getPath(PathNode start, PathNode goal) {
+  public ArrayList<PathNode> getPath(PathNode start, PathNode goal)
+  {
 //
     // System.out.println("Getting Path from: " + start + " to " + goal);
 //
@@ -128,15 +125,6 @@ public class PathFinder
    */
   private ArrayList<PathNode> generatePath(PathNode first, PathNode last)
   {
-
-    if(!nodeLegal(last))
-    {
-      return emptyList;
-    }
-
-    int iterations = 0;
-    int maxIterations = 30000;
-
     /**
      * Essential A* Fields
      */
@@ -151,37 +139,25 @@ public class PathFinder
 
     PathNode current;
 
-    while (frontier.size() > 0)
-    {
-      iterations++;
-      if(iterations >= maxIterations)
-      {
-        return emptyList; //Too many iterations
-      }
-      System.out.println(iterations);
+    while (frontier.size() > 0) {
       current = getLowestF(frontier);
-      if (current.equals(last))
-      {
+      if (current.equals(last)) {
         return constructPath(current, first);
       }
       frontier.remove(current);
       removeFrom(current, frontierArray);
       addTo(current, visitedArray);
       adjacencyList = calcAdjacencies(current);
-      for (PathNode adjNode : adjacencyList)
-      {
+      for (PathNode adjNode : adjacencyList) {
         double tempG = current.getG() + distSquared(current, adjNode);
-        if (!checkArray(adjNode, visitedArray))
-        {
-          if (!checkArray(adjNode, frontierArray))
-          {
+        if (!checkArray(adjNode, visitedArray)) {
+          if (!checkArray(adjNode, frontierArray)) {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
             frontier.add(adjNode);
             addTo(adjNode, frontierArray);
-          } else if (tempG < adjNode.getG())
-          {
+          } else if (tempG < adjNode.getG()) {
             adjNode.setG(tempG);
             adjNode.setH(distSquared(adjNode, last));
             adjNode.setParent(current);
@@ -199,7 +175,8 @@ public class PathFinder
    * @param array
    * @return
    */
-  private boolean checkArray(PathNode node, boolean[][] array) {
+  private boolean checkArray(PathNode node, boolean[][] array)
+  {
     return array[node.getX()][node.getY()];
   }
 
@@ -214,13 +191,11 @@ public class PathFinder
     ArrayList<PathNode> adjTiles = new ArrayList<PathNode>();
     int x = node.getX();
     int y = node.getY();
-    for (Direction dir : Direction.values())
-    {
+    for (Direction dir : Direction.values()) {
       int tempX = x + dir.deltaX();
       int tempY = y + dir.deltaY();
       PathNode tempNode = new PathNode(tempX, tempY);
-      if (nodeLegal(tempNode))
-      {
+      if (nodeLegal(tempNode)) {
         adjTiles.add(tempNode);
       }
     }
@@ -241,82 +216,22 @@ public class PathFinder
       return false;
     }
     int rgb = (map.getRGB(node.getX(), node.getY()) & 0x00FFFFFF);
-    if (rgb == 0x329fff)
-    {
+    if (rgb == 0x329fff) {
       return false;
     }
-    if (antHere(node))
-    {
+    if (antHere(node)) {
       return false;
     }
-    if (exludeList.contains(node))
-    {
-      return false;
-    }
-    if (foodHere(node))
-    {
+    if (exludeList.contains(node)) {
       return false;
     }
     return true;
   }
 
-  private boolean foodHere(PathNode node)
-  {
-    for(FoodData fd: foodList)
-    {
-      if(fd.gridX == node.getX() && fd.gridY == node.getY())
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public boolean antHere(PathNode node)
   {
-    for(AntData ant: antList)
-    {
-      if(ant.gridX == node.getX() && ant.gridY == node.getY())
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-
-  public PathNode foodAdjacent(PathNode node)
-  {
-    for(Direction testDir: Direction.values())
-    {
-      PathNode testNode = new PathNode(node.getX() + testDir.deltaX(), node.getY() + testDir.deltaY());
-      if(foodHere(testNode))
-      {
-        return testNode;
-      }
-    }
-    return null;
-  }
-
-  public PathNode enemyAdjacent(PathNode node)
-  {
-    for(Direction testDir: Direction.values())
-    {
-      PathNode testNode = new PathNode(node.getX() + testDir.deltaX(), node.getY() + testDir.deltaY());
-      if(enemyHere(testNode))
-      {
-        return testNode;
-      }
-    }
-    return null;
-  }
-
-  private boolean enemyHere(PathNode node)
-  {
-    for(AntData ant: enemyList)
-    {
-      if(ant.gridX == node.getX() && ant.gridY == node.getY())
-      {
+    for (AntData ant : antList) {
+      if (ant.gridX == node.getX() && ant.gridY == node.getY()) {
         return true;
       }
     }
@@ -327,8 +242,10 @@ public class PathFinder
   {
     this.antList = antList;
   }
+
   /**
    * A* helper method
+   *
    * @param node
    * @param array
    */
@@ -339,10 +256,9 @@ public class PathFinder
 
   /**
    * A* helper function
-   * @param node
-   * Node to remove
-   * @param array
-   * array to remove node from
+   *
+   * @param node  Node to remove
+   * @param array array to remove node from
    */
   private void removeFrom(PathNode node, boolean[][] array)
   {
@@ -351,19 +267,16 @@ public class PathFinder
 
   /**
    * A helper function so that the A* algorithm has correct priority sorting
-   * @param frontier
-   * The frontier of A*
-   * @return
-   * The node with the lowest f value in frontier
+   *
+   * @param frontier The frontier of A*
+   * @return The node with the lowest f value in frontier
    */
   private PathNode getLowestF(ArrayList<PathNode> frontier)
   {
     PathNode lowestNode = frontier.get(0);
 
-    for(PathNode node: frontier)
-    {
-      if(node.getF() <= lowestNode.getF())
-      {
+    for (PathNode node : frontier) {
+      if (node.getF() <= lowestNode.getF()) {
         lowestNode = node;
       }
     }
@@ -371,40 +284,41 @@ public class PathFinder
   }
 
   /**
-   * @KirtusL
-   * After generating a path with generate path, call this to build the path in reverse order
-   * @param last
-   * The last node in the path
-   * @param first
-   * The node that starts the path
-   * @return
-   * An ArrayList representing the path
+   * @param last  The last node in the path
+   * @param first The node that starts the path
+   * @return An ArrayList representing the path
+   * @KirtusL After generating a path with generate path, call this to build the path in reverse order
    */
   private ArrayList<PathNode> constructPath(PathNode last, PathNode first)
   {
     ArrayList<PathNode> path = new ArrayList<PathNode>();
     boolean done = false;
-    while(!done)
-    {
-      if(last == null)
-      {
+    while (!done) {
+      if (last == null) {
         return path;
       }
 
       path.add(0, last);
-      if(last.equals(first))
-      {
+      if (last.equals(first)) {
         return path;
       }
       last = last.getParent();
-      if(last.equals(first))
-      {
+      if (last.equals(first)) {
         path.add(0, last);
         return path;
       }
     }
     return path;
   }
+
+  /**
+   * @KirtusL
+   * This method returns the nearest initial node to the node passed in
+   * @param node
+   * The node that you wish to find the nearest node to
+   * @return
+   * The nearest initial node
+   */
   //private PathNode findClosestInitialNode(PathNode node)
   //{
   //  PathNode nearest = initialNodes.get(0);
@@ -418,6 +332,12 @@ public class PathFinder
   //  return nearest;
   //}
 
+  /**
+   * @param nodeOne The first initial Node
+   * @param nodeTwo The final initial Node
+   * @return
+   * @KirtusL This method returns the path between two initial nodes
+   */
   //private ArrayList<PathNode> calculateTraversalPath(PathNode nodeOne, PathNode nodeTwo)
   //{
   //  for(ArrayList<PathNode> path: initialPaths)
@@ -429,19 +349,11 @@ public class PathFinder
   //  }
   //  return emptyList;
   //}
-
-
-  /**
-   * @KirtusL
-   * @param start
-   * @param goal
-   * @param exludeList
-   * @return
-   * The path from start to goal ignoring nodes on excludeList
-   */
   public ArrayList<PathNode> getPathSelective(PathNode start, PathNode goal, ArrayList<PathNode> exludeList)
   {
-    this.exludeList = exludeList;
+    this.exludeList.addAll(exludeList);
+    this.exludeList.remove(start);
+    this.exludeList.remove(goal);
     ArrayList<PathNode> path = generatePath(start, goal);
     this.exludeList = emptyList;
     return path;
@@ -449,32 +361,29 @@ public class PathFinder
 
 
   /**
-   * @KirtusL
-   * A method for heuristic and distance purposes
-   * @param nodeOne
-   * The first node
-   * @param nodeTwo
-   * The second node
-   * @return
-   * The distance squared between the nodes
+   * @param nodeOne The first node
+   * @param nodeTwo The second node
+   * @return The distance squared between the nodes
+   * @KirtusL A method for heuristic and distance purposes
    */
-  public double distSquared(PathNode nodeOne, PathNode nodeTwo)
+  private double distSquared(PathNode nodeOne, PathNode nodeTwo)
   {
     double dx = nodeOne.getX() - nodeTwo.getX();
     double dy = nodeOne.getY() - nodeTwo.getY();
-    return ((dx*dx + dy*dy));
+    return ((dx * dx + dy * dy));
   }
 
-  public void printPath (ArrayList<PathNode> path){
+  public void printPath(ArrayList<PathNode> path)
+  {
     if (path == null || path.size() < 1) {
       System.out.println("NULL PATH or ZERO SIZE");
       return;
     }
     PathNode Start = path.get(0);
-    PathNode goal = path.get(path.size()-1);
+    PathNode goal = path.get(path.size() - 1);
 
     System.out.println("Start : " + Start + " Goal : " + goal + " has PathSize " + path.size());
-    for (PathNode pathnode : path){
+    for (PathNode pathnode : path) {
       System.out.println(pathnode);
     }
   }
@@ -485,10 +394,8 @@ public class PathFinder
   }
 
   /**
-   * @KirtusL
-   * Getter for initial paths, used for writing paths to file
-   * @return
-   * Array of initial paths
+   * @return Array of initial paths
+   * @KirtusL Getter for initial paths, used for writing paths to file
    */
 //public ArrayList<PathNode>[] getInitialPaths()
 //{
@@ -510,16 +417,16 @@ public class PathFinder
 
 //}
 
-  Direction getDirectionToWater (int x, int y){
+  Direction getDirectionToWater(int x, int y)
+  {
 
-    Direction dir =  Direction.EAST;
-    for (int i =0; i <8; i++){
-      int newX =  x + dir.deltaX();
+    Direction dir = Direction.EAST;
+    for (int i = 0; i < 8; i++) {
+      int newX = x + dir.deltaX();
       int newY = y + dir.deltaY();
       int rgb = map.getRGB(newX, newY) & 0x00FFFFFF;
       System.out.println("Direction " + dir + " has rgb value " + rgb);
-      if(rgb == 0x329fff)
-      {
+      if (rgb == 0x329fff) {
         return dir;
       }
       dir = Direction.getLeftDir(dir);
@@ -527,27 +434,4 @@ public class PathFinder
     return null;
   }
 
-  public void setFoodList(ArrayList<FoodData> foodList)
-  {
-    this.foodList = foodList;
-  }
-  public void setEnemyList(ArrayList<AntData> enemyList)
-  {
-    this.enemyList = enemyList;
-  }
-
-  public PathNode getRandomExplorerNode(PathNode start)
-  {
-    PathNode attempt;
-    int x = Direction.getRandomDir().deltaX()*(start.getX() + 10 + random.nextInt(20));
-    int y = Direction.getRandomDir().deltaY()*(start.getY() + 10 + random.nextInt(20));
-    attempt = new PathNode(x, y);
-    while(!nodeLegal(attempt))
-    {
-      x = Direction.getRandomDir().deltaX()*(start.getX() + 10 + random.nextInt(20));
-      y = Direction.getRandomDir().deltaY()*(start.getY() + 10 + random.nextInt(20));
-      attempt = new PathNode(x,y);
-    }
-    return attempt;
-  }
 }

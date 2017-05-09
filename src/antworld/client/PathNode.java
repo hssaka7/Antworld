@@ -4,6 +4,7 @@ import antworld.common.Direction;
 
 /**
  * The Class PathNode represents a single node for A* pathfinding
+ *
  * @Author: Kirtus Leyba
  */
 class PathNode
@@ -18,6 +19,7 @@ class PathNode
 
   /**
    * Pathnode constructo
+   *
    * @param x the x coordinate of the pathnode
    * @param y the y coordinate of the pathnode
    */
@@ -38,6 +40,7 @@ class PathNode
   {
     this.visited = visited;
   }
+
   public boolean getVisited()
   {
     return visited;
@@ -46,19 +49,14 @@ class PathNode
   @Override
   public boolean equals(Object o)
   {
-    if(o == null)
-    {
+    if (o == null) {
       return false;
     }
-    if(o.getClass()!=getClass())
-    {
+    if (o.getClass() != getClass()) {
       return false;
-    }
-    else
-    {
-      PathNode other = (PathNode)o;
-      if(other.getX() == x && other.getY() == y)
-      {
+    } else {
+      PathNode other = (PathNode) o;
+      if (other.getX() == x && other.getY() == y) {
         return true;
       }
     }
@@ -68,7 +66,7 @@ class PathNode
   @Override
   public String toString()
   {
-    return x +"," + y +'|';
+    return x + "," + y + '|';
   }
 
   //Below are the standard setters and getters for this structure
@@ -103,15 +101,18 @@ class PathNode
     return f;
   }
 
-  public int getX() {
+  public int getX()
+  {
     return x;
   }
 
-  public int getY() {
+  public int getY()
+  {
     return y;
   }
 
-  public double getF() {
+  public double getF()
+  {
     return f;
   }
 
@@ -119,6 +120,7 @@ class PathNode
   {
     this.parent = parent;
   }
+
   public PathNode getParent()
   {
     return parent;
@@ -131,10 +133,9 @@ class PathNode
 
     System.out.println("(dx, dy): " + deltaX + ", " + deltaY);
 
-    if(deltaX == 1) //pathnode is to the East
+    if (deltaX == 1) //pathnode is to the East
     {
-      switch(deltaY)
-      {
+      switch (deltaY) {
         case -1: //pathnode is to the NE
           return Direction.NORTHEAST;
         case 0: //pathnode is directly E
@@ -144,11 +145,9 @@ class PathNode
         default:
           return Direction.getRandomDir();
       }
-    }
-    else if(deltaX == 0) //Pathnode is north or south
+    } else if (deltaX == 0) //Pathnode is north or south
     {
-      switch(deltaY)
-      {
+      switch (deltaY) {
         case -1: //pathnode is to the N
           return Direction.NORTH;
         case 1: //pathnode is S
@@ -158,11 +157,9 @@ class PathNode
         default:
           return Direction.getRandomDir();
       }
-    }
-    else if(deltaX == -1) //Pathnode is West
+    } else if (deltaX == -1) //Pathnode is West
     {
-      switch(deltaY)
-      {
+      switch (deltaY) {
         case -1: //pathnode is to the NW
           return Direction.NORTHWEST;
         case 0: //pathnode is directly W
@@ -178,19 +175,16 @@ class PathNode
 
   public boolean isAdjacent(PathNode otherNode)
   {
-    for (Direction dir : Direction.values())
-    {
+    for (Direction dir : Direction.values()) {
       int tempX = x + dir.deltaX();
       int tempY = y + dir.deltaY();
-      if(otherNode.equals(new PathNode(tempX, tempY)))
-      {
+      if (otherNode.equals(new PathNode(tempX, tempY))) {
         return true;
       }
     }
     int tempX = x;
     int tempY = y;
-    if(otherNode.equals(new PathNode(tempX, tempY)))
-    {
+    if (otherNode.equals(new PathNode(tempX, tempY))) {
       return true;
     }
     return false;

@@ -21,4 +21,7 @@ Where:
 
 Army = your team name
 
+Our Old Github link : https://github.com/DebRez/AntWorld
+Needed To recreate because this one didn't work 
+
 pathToServer = your running server for the game
