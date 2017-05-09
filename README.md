@@ -1,17 +1,22 @@
+# ArmyAntClient
 
+## Team Information
+------------
 Team Name: Army
 
 Team Members:
+* Aakash Basnet
+* Himanshu Chaudhary
+* Kirtus Leyba
+* Deborah Rezanka
 
-Aakash Basnet
-Himanshu Chaudhary
-Kirtus Leyba
-Deborah Rezanka
-Introduction
+## Introduction
 
-AntWorld is a project for UNM's CS-351, Design of Large Programs, course in Spring 2017. The goal is to program an AI for the Army Ant team that can beat the professors SimpleSolidAI.
+AntWorld is a project for UNM's CS-351, Design of Large Programs, course in
+Spring 2017. The goal is to program an AI for the Army Ant team that can beat
+the professors SimpleSolidAI.
 
-How To Use The Program
+### How To Use The Program
 
 To start the client from the command line, enter:
 
@@ -21,7 +26,9 @@ Where:
 
 Army = your team name
 
-Our Old Github link : https://github.com/DebRez/AntWorld
-Needed To recreate because this one didn't work 
-
 pathToServer = your running server for the game
+
+Old Github account: https://github.com/DebRez/AntWorld
+New Github account: https://github.com/hssaka7/Antworld
+
+
