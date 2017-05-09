@@ -104,7 +104,9 @@ public class WorkerGroup
       return;
     }
     if (debug) System.out.println("Updating to List in Worker Group" + ant.id);
-    ants.get(ant.id).updateAnt(ant);
+    if (ants.get(ant.id) != null) {
+      ants.get(ant.id).updateAnt(ant);
+    }
   }
 
   void chooseAction()
@@ -136,7 +138,11 @@ public class WorkerGroup
     dont.remove(start);
     dont.remove(goal);
     // required path to Retrun
-    returnPath = pathFinder.getPathSelective(dont.get(dont.size() - 1), start, dont);
+    if (dont.size() > 0) {
+      returnPath = pathFinder.getPathSelective(dont.get(dont.size() - 1), start, dont);
+    } else {
+      returnPath = pathFinder.getPath(start, goal);
+    }
 
     if (debug) {
       System.out.println("Start: ------------" + start.getX() + " " + start.getY());

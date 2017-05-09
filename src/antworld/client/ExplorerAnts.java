@@ -383,8 +383,10 @@ public class ExplorerAnts extends Ants
       case HEAL: {
         ant.action.type = AntAction.AntActionType.HEAL;
         if (!startedToheal) {
-          healUnits = (ant.antType.getMaxHealth() / ant.health) * 2;
-          startedToheal = true;
+          if (ant.health > 0) {
+            healUnits = (ant.antType.getMaxHealth() / ant.health) * 2;
+            startedToheal = true;
+          }
         }
       }
       break;

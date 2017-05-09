@@ -1,5 +1,9 @@
 package antworld.client;
 
+import antworld.common.*;
+import antworld.common.AntAction.AntActionType;
+import antworld.common.AntAction.AntState;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,10 +11,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
-
-import antworld.common.*;
-import antworld.common.AntAction.AntState;
-import antworld.common.AntAction.AntActionType;
 
 
 /**
@@ -48,7 +48,8 @@ import antworld.common.AntAction.AntActionType;
 
 public class ArmyAntClient
 {
-  private static final boolean DEBUG = false;
+  int gametick = 0;
+  private static final boolean DEBUG = true;
   private final TeamNameEnum myTeam;
   private ObjectInputStream inputStream = null;
   private ObjectOutputStream outputStream = null;
@@ -198,8 +199,9 @@ public class ArmyAntClient
    */
   void addFoodData(FoodData food, PacketToServer packetOut)
   {
-    if (food.quantity > 3) {
-      WorkerGroup group = new WorkerGroup(myTeam, pathFinder, centerX + 10, centerY);
+    if (food.quantity > 20) {
+      WorkerGroup group = new WorkerGroup(myTeam, pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
+      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)));
       group.setGoal(food.gridX, food.gridY);
       addGroup(group, packetOut);
       clientFoodList.put(getDistance(food), food);
@@ -224,11 +226,22 @@ public class ArmyAntClient
   {
     initializeNodesTosearch();
     for (int i = 0; i < nodesTosearch.size(); i += 2) {
-      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX, centerY, myTeam);
+      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
+      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)), myTeam);
       addAnt(explorer, packetOut);
       explorer.setGoal(nodesTosearch.get(i), nodesTosearch.get(i + 1));
     }
+//
+  }
 
+  void createSmallExplorers(PacketToServer packetOut)
+  {
+    initializeNodesTosearch();
+    for (int i = 0; i < 1; i += 2) {
+      ExplorerAnts explorer = new ExplorerAnts(pathFinder, centerX - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)),
+      centerY - (Constants.NEST_RADIUS - 1) + random.nextInt(2 * (Constants.NEST_RADIUS - 1)), myTeam);
+      addAnt(explorer, packetOut);
+    }
   }
 
   /**
@@ -314,7 +327,9 @@ public class ArmyAntClient
     }
 
     for (int i = 0; i < birthCount; i++) {
-      ant = antlist.get(index + i);
+      if (index + i < antlist.size()) {
+        ant = antlist.get(index + i);
+      }
       ant.gridX = 0;
       ant.gridY = 0;
       if (debug) System.out.println("Removing ant to list at index " + i);
@@ -385,6 +400,7 @@ public class ArmyAntClient
    */
   public void mainGameLoop()
   {
+
     while (true) {
       PacketToClient packetIn = null;
       try {
@@ -429,7 +445,15 @@ public class ArmyAntClient
         initial = false;
       }
       updateReceivedData(packetIn, packetOut);
+
+      if (gametick % 400 == 0) {
+        createSmallExplorers(packetOut);
+        gametick = 0;
+      }
+      gametick++;
+
       send(packetOut);
+
     }
   }
 
