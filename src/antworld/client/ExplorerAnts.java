@@ -357,7 +357,7 @@ public class ExplorerAnts extends Ants{
             {
                 dir = pathFinder.getDirectionToWater(ant.gridX,ant.gridY);
                 if (dir == null) {
-                    antBehavior = AntBehaviors.EXPLORE;
+                    antBehavior = previousBehaviour;
                     return;
                 }
                 ant.action.type = AntAction.AntActionType.PICKUP;
@@ -387,6 +387,7 @@ public class ExplorerAnts extends Ants{
                     startedToheal = true;
                 }
             }
+            break;
         }
     }
 
@@ -444,7 +445,7 @@ public class ExplorerAnts extends Ants{
             }
             case PICKUPWATER:
             {
-                if (ant.health < 20) {
+                if (ant.health < 10) {
                     antBehavior = AntBehaviors.HEAL;
                 }
                 else{
@@ -486,7 +487,7 @@ public class ExplorerAnts extends Ants{
 
     boolean checkCriticalConditions(){
         if (antBehavior == AntBehaviors.PICKUPWATER || antBehavior == AntBehaviors.HEAL) return false;
-        if (ant.health < 10 && ant.carryUnits > 0){
+        if (ant.health < 20 && ant.carryUnits > 0){
             previousBehaviour = antBehavior;
             antBehavior = AntBehaviors.HEAL;
             return true;

@@ -111,7 +111,7 @@ public class WorkerAnts extends Ants{
             }
             this.ant = ant;
             checkForWater++;
-            updateAntBehaviour();
+            if (!checkCriticalConditions()) updateAntBehaviour();
         }
     }
 
@@ -172,11 +172,23 @@ public class WorkerAnts extends Ants{
             }
             case PICKUPWATER:
             {
-                if (this.path == null) {
-                    antBehavior = AntBehaviors.EXPLORE;
+                dir = pathFinder.getDirectionToWater(ant.gridX,ant.gridY);
+                if (dir == null) {
+                    antBehavior = previousBehaviour;
+                    return;
                 }
-                else {
-                    antBehavior = AntBehaviors.GOTO;
+                ant.action.type = AntAction.AntActionType.PICKUP;
+                ant.action.direction = dir;
+                ant.action.quantity = 5 - ant.carryUnits;
+                break;
+            }
+
+            case HEAL:
+            {
+                ant.action.type = AntAction.AntActionType.HEAL;
+                if (!startedToheal) {
+                    healUnits =  ant.carryUnits;
+                    startedToheal = true;
                 }
                 break;
             }
@@ -236,17 +248,13 @@ public class WorkerAnts extends Ants{
             }
             case PICKUPWATER:
             {
-                if (ant.health < 20) {
-                    antBehavior = AntBehaviors.HEAL;
-                }
-                else{
-                    antBehavior = previousBehaviour;
-                }
+                antBehavior = AntBehaviors.HEAL;
+
                 break;
             }
             case HEAL:
             {
-                if (healUnits>1 && ant.health < ant.antType.getMaxHealth()-3){
+                if (healUnits>1){
                     healUnits--;
                 }
                 else {
@@ -261,14 +269,14 @@ public class WorkerAnts extends Ants{
 
     boolean checkCriticalConditions(){
         if (antBehavior == AntBehaviors.PICKUPWATER || antBehavior == AntBehaviors.HEAL) return false;
-        if (ant.health < 10 && ant.carryUnits > 0){
+        if (ant.health < 3 && ant.carryUnits > 0){
             previousBehaviour = antBehavior;
             antBehavior = AntBehaviors.HEAL;
             return true;
         }
         if (checkForWater < 50) return false;
         if (pathFinder.getDirectionToWater(ant.gridX,ant.gridY)!=null){
-            if (ant.carryUnits < 3){
+            if (ant.health<ant.antType.getMaxHealth()-5 && ant.carryUnits==0){
                 previousBehaviour = antBehavior;
                 antBehavior = AntBehaviors.PICKUPWATER;
                 checkForWater = 0;

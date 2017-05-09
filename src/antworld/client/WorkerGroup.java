@@ -7,6 +7,7 @@ import antworld.common.TeamNameEnum;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by hiManshu on 5/8/2017.
@@ -25,6 +26,8 @@ public class WorkerGroup {
     private ArrayList<PathNode> returnPath = new ArrayList<>();
 
     private ArrayList<Ants> newAnts = new ArrayList<>();
+
+    private HashSet<Integer> include = new HashSet<>();
 
     PathNode start ;
     PathNode goal ;
@@ -54,13 +57,16 @@ public class WorkerGroup {
 
         ArrayList<AntData> toReturn = new ArrayList<>();
         for (Ants ant : ants.values()){
+            if (!include.contains(ant.getAnt().id)) continue;
             System.out.println("Adding Worker Ant");
             toReturn.add(ant.getAnt());
         }
+        include.clear();
         return toReturn;
     }
 
     void updateAnt (AntData ant){
+        include.add(ant.id);
         if (debug) System.out.println("Updating Ant in WorkerGroup " + ant.id);
         if (ant.state == AntAction.AntState.UNDERGROUND && !ants.containsKey(ant.id)){
            if (debug) System.out.println("Adding to List in Worker Group" + ant.id);
@@ -80,6 +86,7 @@ public class WorkerGroup {
 
     void chooseAction (){
         for (Ants ant: ants.values()){
+            if (!include.contains(ant.getAnt().id)) continue;
              ant.update();
         }
     }

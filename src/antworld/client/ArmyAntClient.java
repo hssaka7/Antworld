@@ -196,7 +196,7 @@ public class ArmyAntClient
 
     void addGroup(WorkerGroup group, PacketToServer packetOut){
         groups.add(group);
-        group.setGoal(centerX+15, centerY+15);
+        group.setGoal(840, 1316);
         for (Ants ants : group.getAntsList() ){
             addAnt(ants,group,packetOut);
         }
